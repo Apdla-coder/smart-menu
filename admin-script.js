@@ -8,6 +8,24 @@ var allProducts = [];
 var restaurantSettings = null;
 let bannerImageUrls = []; // To hold banner image URLs
 
+// Debug function for banner troubleshooting
+window.debugBanner = function() {
+    console.log('=== BANNER DEBUG INFO ===');
+    console.log('bannerImageUrls array:', bannerImageUrls);
+    console.log('bannerImageUrls length:', bannerImageUrls.length);
+    console.log('restaurantSettings:', restaurantSettings);
+    console.log('restaurantSettings.ad_banner_urls:', restaurantSettings ? restaurantSettings.ad_banner_urls : 'null');
+    const container = document.getElementById('adBannersPreviewContainer');
+    console.log('Container exists:', !!container);
+    if (container) {
+        console.log('Container children:', container.children.length);
+        console.log('Container HTML:', container.innerHTML.substring(0, 200));
+    }
+    if (bannerImageUrls.length > 0) {
+        console.log('First URL:', bannerImageUrls[0].substring(0, 150) + '...');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async function() {
     loading.init();
     
@@ -19,6 +37,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Initialize UI
     initializeUI();
+    
+    // Log startup information
+    console.log('=== Admin Panel Loaded ===');
+    console.log('User:', session.userName);
+    console.log('Restaurant ID:', session.restaurantId);
+    console.log('Supabase URL:', window.SUPABASE_CONFIG.URL);
+    
     await loadAllData();
     setupEventListeners();
 });
@@ -388,32 +413,32 @@ function updateReviewsList(reviews) {
     document.getElementById('reviewsCount').textContent = reviews.length;
 
     if (!reviews || reviews.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-center py-12 col-span-full">لا توجد تقييمات تطابق هذا الفلتر.</p>';
+        container.innerHTML = '<p class="text-gray-400 text-center py-12 col-span-full">لا توجد تقييمات تطابق هذا الفلتر.</p>';
         return;
     }
 
     container.innerHTML = reviews.map(r => `
-        <div class="border rounded-lg p-4 flex flex-col ${r.is_approved ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}">
+        <div class="border rounded-lg p-4 flex flex-col ${r.is_approved ? 'bg-slate-700 border-emerald-500/30' : 'bg-slate-700 border-blue-500/30'}">
             <div class="flex-1">
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <h4 class="font-bold text-gray-800">${r.customer_name}</h4>
-                        <p class="text-sm text-gray-500">${r.customer_phone}</p>
-                        <p class="text-xs text-gray-400">${r.customer_governorate || ''} - ${r.customer_city || ''}</p>
+                        <h4 class="font-bold text-blue-400">${r.customer_name}</h4>
+                        <p class="text-sm text-gray-400">${r.customer_phone}</p>
+                        <p class="text-xs text-gray-500">${r.customer_governorate || ''} - ${r.customer_city || ''}</p>
                     </div>
-                    <span class="text-xs px-2 py-1 rounded-full font-medium ${r.is_approved ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">
+                    <span class="text-xs px-2 py-1 rounded-full font-medium ${r.is_approved ? 'bg-emerald-600/30 text-emerald-400' : 'bg-blue-600/30 text-blue-400'}">
                         ${r.is_approved ? 'موافق عليه' : 'قيد الانتظار'}
                     </span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 mb-3 text-sm text-center">
-                    <div><p class="text-gray-600">المكان</p><p class="font-bold">${'★'.repeat(r.place_rating)}<span class="text-gray-300">${'★'.repeat(5 - r.place_rating)}</span></p></div>
-                    <div><p class="text-gray-600">المنتجات</p><p class="font-bold">${'★'.repeat(r.products_rating)}<span class="text-gray-300">${'★'.repeat(5 - r.products_rating)}</span></p></div>
-                    <div><p class="text-gray-600">الخدمة</p><p class="font-bold">${'★'.repeat(r.service_rating)}<span class="text-gray-300">${'★'.repeat(5 - r.service_rating)}</span></p></div>
+                    <div><p class="text-gray-400">المكان</p><p class="font-bold text-yellow-400">${'★'.repeat(r.place_rating)}<span class="text-gray-600">${'★'.repeat(5 - r.place_rating)}</span></p></div>
+                    <div><p class="text-gray-400">المنتجات</p><p class="font-bold text-yellow-400">${'★'.repeat(r.products_rating)}<span class="text-gray-600">${'★'.repeat(5 - r.products_rating)}</span></p></div>
+                    <div><p class="text-gray-400">الخدمة</p><p class="font-bold text-yellow-400">${'★'.repeat(r.service_rating)}<span class="text-gray-600">${'★'.repeat(5 - r.service_rating)}</span></p></div>
                 </div>
-                ${r.comment ? `<p class="text-gray-700 mb-4 p-3 bg-white rounded-md border text-sm">${r.comment}</p>` : ''}
+                ${r.comment ? `<p class="text-gray-300 mb-4 p-3 bg-slate-800 rounded-md border border-slate-600 text-sm">${r.comment}</p>` : ''}
             </div>
             <div class="flex gap-2 mt-auto">
-                ${!r.is_approved ? `<button onclick="approveReview('${r.id}')" class="flex-1 bg-green-600 text-white py-1.5 rounded text-sm font-semibold hover:bg-green-700 transition-colors">✅ موافقة</button>` : ''}
+                ${!r.is_approved ? `<button onclick="approveReview('${r.id}')" class="flex-1 bg-emerald-600 text-white py-1.5 rounded text-sm font-semibold hover:bg-emerald-700 transition-colors">✅ موافقة</button>` : ''}
                 <button onclick="deleteReview('${r.id}')" class="flex-1 bg-red-600 text-white py-1.5 rounded text-sm font-semibold hover:bg-red-700 transition-colors">🗑️ حذف</button>
             </div>
         </div>
@@ -455,25 +480,110 @@ function updateUsersList(users) {
  * Update settings form
  */
 function updateSettingsForm() {
-    if (!restaurantSettings) return;
+    if (!restaurantSettings) {
+        console.log('restaurantSettings is null, skipping form update');
+        return;
+    }
+
+    console.log('📋 Updating settings form with:', restaurantSettings);
 
     const primaryColor = restaurantSettings.primary_color || '#D97706';
     
-    document.getElementById('restNameAr').value = restaurantSettings.restaurant_name_ar || '';
-    document.getElementById('restNameEn').value = restaurantSettings.restaurant_name_en || '';
-    document.getElementById('currency').value = restaurantSettings.currency || 'ج.م';
-    document.getElementById('primaryColor').value = primaryColor;
-    document.getElementById('restPrimaryColorHex').value = restaurantSettings.primary_color || '#D97706';
-    bannerImageUrls = Array.isArray(restaurantSettings.ad_banner_urls) ? restaurantSettings.ad_banner_urls : [];
-    renderBannerPreviews();
-    document.getElementById('restLogo').value = restaurantSettings.logo_url || '';
-    document.getElementById('restFacebook').value = restaurantSettings.facebook_url || '';
-    document.getElementById('restInstagram').value = restaurantSettings.instagram_url || '';
-    document.getElementById('restTiktok').value = restaurantSettings.tiktok_url || '';
-    document.getElementById('restWhatsapp').value = restaurantSettings.whatsapp_number || '';
-    document.getElementById('socialAdImage').value = restaurantSettings.social_ad_image || '';
-    document.getElementById('socialAdVideo').value = restaurantSettings.social_ad_video || '';
+    const inputs = {
+        'restNameAr': restaurantSettings.restaurant_name_ar || '',
+        'restNameEn': restaurantSettings.restaurant_name_en || '',
+        'currency': restaurantSettings.currency || 'ج.م',
+        'restLogo': restaurantSettings.logo_url || '',
+        'restFacebook': restaurantSettings.facebook_url || '',
+        'restInstagram': restaurantSettings.instagram_url || '',
+        'restTiktok': restaurantSettings.tiktok_url || '',
+        'restWhatsapp': restaurantSettings.whatsapp_number || '',
+        'socialAdImage': restaurantSettings.social_ad_image || '',
+        'socialAdVideo': restaurantSettings.social_ad_video || ''
+    };
 
+    // Update all input fields
+    Object.entries(inputs).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+        } else {
+            console.warn(`Element with ID "${id}" not found`);
+        }
+    });
+
+    // Update color fields
+    const primaryColorEl = document.getElementById('primaryColor');
+    const restPrimaryColorEl = document.getElementById('restPrimaryColor');
+    const colorHexEl = document.getElementById('restPrimaryColorHex');
+    
+    if (primaryColorEl) primaryColorEl.value = primaryColor;
+    if (restPrimaryColorEl) restPrimaryColorEl.value = primaryColor;
+    if (colorHexEl) colorHexEl.value = restaurantSettings.primary_color || '#D97706';
+
+    // Load banner URLs - handle both array and JSON string
+    console.log('━━━━━━━━━━━━━━ 🖼️ BANNER URLS PROCESSING START ━━━━━━━━━━━━━━');
+    console.log('ad_banner_urls raw value:', restaurantSettings.ad_banner_urls);
+    console.log('ad_banner_urls type:', typeof restaurantSettings.ad_banner_urls);
+    console.log('Is array?:', Array.isArray(restaurantSettings.ad_banner_urls));
+    
+    let parsedBannerUrls = [];
+    
+    if (restaurantSettings.ad_banner_urls) {
+        try {
+            // If it's a JSON string, parse it
+            if (typeof restaurantSettings.ad_banner_urls === 'string') {
+                console.log('🔍 Value is string, checking if JSON...');
+                const trimmedValue = restaurantSettings.ad_banner_urls.trim();
+                console.log('Trimmed first char:', trimmedValue[0]);
+                
+                // Check if it looks like JSON
+                if (trimmedValue.startsWith('[') || trimmedValue.startsWith('{')) {
+                    console.log('📝 Attempting to parse JSON...');
+                    parsedBannerUrls = JSON.parse(trimmedValue);
+                    console.log('✅ Successfully parsed JSON. Array length:', parsedBannerUrls.length);
+                    console.log('Parsed array:', parsedBannerUrls);
+                } else {
+                    console.warn('⚠️ ad_banner_urls is a string but not valid JSON');
+                    console.log('First 100 chars:', restaurantSettings.ad_banner_urls.substring(0, 100));
+                    parsedBannerUrls = [];
+                }
+            } else if (Array.isArray(restaurantSettings.ad_banner_urls)) {
+                // Already an array
+                parsedBannerUrls = restaurantSettings.ad_banner_urls;
+                console.log('✅ ad_banner_urls is already an array, length:', parsedBannerUrls.length);
+            } else {
+                console.warn('⚠️ ad_banner_urls is neither string nor array:', typeof restaurantSettings.ad_banner_urls);
+                parsedBannerUrls = [];
+            }
+        } catch (error) {
+            console.error('❌ ERROR parsing ad_banner_urls:', error);
+            console.error('Error message:', error.message);
+            console.log('Raw value that caused error:', restaurantSettings.ad_banner_urls);
+            parsedBannerUrls = [];
+        }
+    } else {
+        console.log('⚠️ ad_banner_urls is null or undefined');
+        parsedBannerUrls = [];
+    }
+
+    // Update global bannerImageUrls
+    bannerImageUrls = Array.isArray(parsedBannerUrls) ? parsedBannerUrls : [];
+    console.log('━━━━━━━━━━━━━━ 📊 FINAL RESULT ━━━━━━━━━━━━━━');
+    console.log('Final bannerImageUrls:', bannerImageUrls);
+    console.log('Total images:', bannerImageUrls.length);
+    
+    if (bannerImageUrls.length > 0) {
+        bannerImageUrls.forEach((url, idx) => {
+            console.log(`Image ${idx + 1}:`, url.substring(0, 100) + (url.length > 100 ? '...' : ''));
+        });
+    }
+    
+    console.log('About to call renderBannerPreviews()');
+    renderBannerPreviews();
+    console.log('━━━━━━━━━━━━━━ ✅ BANNER URLS PROCESSING COMPLETE ━━━━━━━━━━━━━━');
+
+    // Update previews
     updateColorPreview(primaryColor);
     updateLogoPreview(restaurantSettings.logo_url || '');
 }
@@ -665,72 +775,160 @@ async function toggleProduct(productId, isAvailable) {
 // ==================== SETTINGS OPERATIONS ====================
 
 async function saveSettings() {
-    const nameAr = document.getElementById('restNameAr').value.trim();
-    const nameEn = document.getElementById('restNameEn').value.trim();
-    const currency = document.getElementById('currency').value;
-    const primaryColor = document.getElementById('restPrimaryColor').value;
-    const logo = document.getElementById('restLogo').value;
-    const facebook = document.getElementById('restFacebook').value;
-    const instagram = document.getElementById('restInstagram').value;
-    const tiktok = document.getElementById('restTiktok').value;
-    const whatsapp = document.getElementById('restWhatsapp').value;
-    const socialAdImage = document.getElementById('socialAdImage').value;
-    const socialAdVideo = document.getElementById('socialAdVideo').value;
-    
-    // Process banner images - allow all images
-    let processedBannerUrls = [...bannerImageUrls];
-    
-    if (!nameAr) {
-        utils.notify('⚠️ الرجاء إدخال اسم المطعم بالعربي', 'error');
-        return;
-    }
-
-    loading.show();
     try {
-        if (restaurantSettings) {
-            await db.updateSettings(restaurantSettings.id, {
-                restaurant_name_ar: nameAr,
-                restaurant_name_en: nameEn,
-                currency: currency,
-                primary_color: primaryColor,
-                logo_url: logo,
-                facebook_url: facebook,
-                instagram_url: instagram,
-                tiktok_url: tiktok,
-                whatsapp_number: whatsapp,
-                ad_banner_urls: processedBannerUrls,
-                social_ad_image: socialAdImage,
-                social_ad_video: socialAdVideo
-            });
-        } else {
-            await db.createSettings({
-                restaurant_name_ar: nameAr,
-                restaurant_name_en: nameEn,
-                currency: currency,
-                primary_color: primaryColor,
-                logo_url: logo,
-                facebook_url: facebook,
-                instagram_url: instagram,
-                tiktok_url: tiktok,
-                whatsapp_number: whatsapp,
-                ad_banner_urls: processedBannerUrls,
-                social_ad_image: socialAdImage,
-                social_ad_video: socialAdVideo
-            });
+        // Get all input values with null checks
+        const restNameArEl = document.getElementById('restNameAr');
+        const restNameEnEl = document.getElementById('restNameEn');
+        const currencyEl = document.getElementById('currency');
+        const whatsappEl = document.getElementById('restWhatsapp');
+        const primaryColorEl = document.getElementById('restPrimaryColor');
+        const logoEl = document.getElementById('restLogo');
+        const fbEl = document.getElementById('restFacebook');
+        const igEl = document.getElementById('restInstagram');
+        const ttEl = document.getElementById('restTiktok');
+        const adImageEl = document.getElementById('socialAdImage');
+        const adVideoEl = document.getElementById('socialAdVideo');
+
+        const nameAr = restNameArEl ? restNameArEl.value.trim() : '';
+        const nameEn = restNameEnEl ? restNameEnEl.value.trim() : '';
+        const currency = currencyEl ? currencyEl.value.trim() : 'ج.م';
+        const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+        const primaryColor = primaryColorEl ? primaryColorEl.value : '#D97706';
+        const logo = logoEl ? logoEl.value.trim() : '';
+        const facebook = fbEl ? fbEl.value.trim() : '';
+        const instagram = igEl ? igEl.value.trim() : '';
+        const tiktok = ttEl ? ttEl.value.trim() : '';
+        const socialAdImage = adImageEl ? adImageEl.value.trim() : '';
+        const socialAdVideo = adVideoEl ? adVideoEl.value.trim() : '';
+
+        console.log('saveSettings - nameAr:', nameAr, 'restaurantSettings:', restaurantSettings);
+
+        if (!nameAr) {
+            utils.notify('⚠️ الرجاء إدخال اسم المطعم بالعربي', 'error');
+            return;
         }
+
+        loading.show();
+
+        // Refresh restaurantSettings from database if null
+        if (!restaurantSettings) {
+            console.log('restaurantSettings is null, attempting to reload from database');
+            const settings = await db.getSettings();
+            if (settings && settings.length > 0) {
+                restaurantSettings = settings[0];
+                console.log('Reloaded restaurantSettings:', restaurantSettings);
+            }
+        }
+
+        // Check banner image URLs size and limit them
+        let processedBannerUrls = [];
+        if (Array.isArray(bannerImageUrls)) {
+            // Keep all images - we'll save them even if they're Base64
+            // Supabase text column can handle large Base64 strings
+            processedBannerUrls = bannerImageUrls.filter(url => {
+                if (!url) return false;
+                return true;
+            });
+            
+            // Log the size of banner data
+            const bannerDataSize = JSON.stringify(processedBannerUrls).length;
+            console.log('📊 Banner URLs size:', (bannerDataSize / 1024).toFixed(2), 'KB');
+            console.log('Total images to save:', processedBannerUrls.length);
+            
+            // Warn if data is large but still save it
+            if (bannerDataSize > 1000000) {
+                console.warn('⚠️ Banner data is very large:', (bannerDataSize / 1024 / 1024).toFixed(2), 'MB');
+                utils.notify('⚠️ تحذير: بيانات الصور كبيرة جداً، قد يستغرق وقت أطول في الحفظ', 'info');
+            }
+        }
+
+        const settingsData = {
+            restaurant_name_ar: nameAr,
+            restaurant_name_en: nameEn || null,
+            currency: currency || 'ج.م',
+            primary_color: primaryColor || '#D97706',
+            logo_url: logo || null,
+            facebook_url: facebook || null,
+            instagram_url: instagram || null,
+            tiktok_url: tiktok || null,
+            whatsapp_number: whatsapp || null,
+            // Convert banner URLs array to JSON string for database
+            ad_banner_urls: processedBannerUrls.length > 0 ? JSON.stringify(processedBannerUrls) : null,
+            social_ad_image: socialAdImage || null,
+            social_ad_video: socialAdVideo || null
+        };
+
+        console.log('💾 saveSettings - Starting save process');
+        console.log('Settings ID:', restaurantSettings ? restaurantSettings.id : 'null');
+        console.log('Banner images count:', processedBannerUrls.length);
+
+        // Check total data size
+        const totalDataSize = JSON.stringify(settingsData).length;
+        console.log('📊 Total data size:', (totalDataSize / 1024).toFixed(2), 'KB');
+
+        // Warn if data is large but don't block
+        if (totalDataSize > 2000000) {
+            console.warn('⚠️ Data is large:', (totalDataSize / 1024 / 1024).toFixed(2), 'MB');
+            utils.notify('⚠️ تحذير: البيانات كبيرة، قد تستغرق وقتاً أطول', 'info');
+        }
+
+        let result;
+        if (restaurantSettings && restaurantSettings.id) {
+            console.log('🔄 Updating existing settings with ID:', restaurantSettings.id);
+            result = await db.updateSettings(restaurantSettings.id, settingsData);
+        } else {
+            console.log('✨ Creating new settings');
+            try {
+                result = await db.createSettings(settingsData);
+            } catch (createError) {
+                // Handle 409 Conflict - settings already exist
+                if (createError.message && createError.message.includes('409')) {
+                    console.log('⚠️ 409 Conflict: Settings already exist, attempting to update');
+                    // Try to fetch existing settings and update
+                    const existingSettings = await db.getSettings();
+                    if (existingSettings && existingSettings.length > 0) {
+                        restaurantSettings = existingSettings[0];
+                        console.log('🔄 Found existing settings, updating:', restaurantSettings.id);
+                        result = await db.updateSettings(restaurantSettings.id, settingsData);
+                    } else {
+                        throw createError;
+                    }
+                } else {
+                    throw createError;
+                }
+            }
+        }
+
+        console.log('saveSettings - result:', result);
 
         utils.notify('✅ تم حفظ الإعدادات بنجاح', 'success');
+        
+        // Reload data to show updated settings
         await loadAllData(false);
     } catch (error) {
-        console.error('Error saving settings:', error);
-        
-        if (error.message === 'PAYLOAD_TOO_LARGE') {
-            utils.notify('❌ الصور كبيرة جدًا. الرجاء استخدام صور أصغر حجمًا.', 'error');
+        console.error('Error in saveSettings:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            restaurantSettings: restaurantSettings,
+            dbAvailable: typeof db !== 'undefined'
+        });
+
+        if (error.message && error.message.includes('timeout')) {
+            utils.notify('❌ انتهت المهلة الزمنية. يرجى التأكد من اتصالك بالإنترنت وحاول مرة أخرى.', 'error');
+        } else if (error.message && error.message.includes('PAYLOAD_TOO_LARGE')) {
+            utils.notify('❌ الصور كبيرة جدًا. يرجى استخدام صور أصغر حجمًا أو حذف بعض الصور.', 'error');
+        } else if (error.message && error.message.includes('409')) {
+            utils.notify('❌ خطأ: الإعدادات موجودة بالفعل ولم يتم التحديث بشكل صحيح. يرجى تحديث الصفحة والمحاولة مرة أخرى.', 'error');
+        } else if (error.message) {
+            utils.notify('❌ خطأ في حفظ الإعدادات: ' + error.message, 'error');
         } else {
-            utils.notify('❌ خطأ في حفظ الإعدادات', 'error');
+            utils.notify('❌ حدث خطأ غير متوقع أثناء حفظ الإعدادات', 'error');
         }
     } finally {
-        loading.hide();
+        if (loading && typeof loading.hide === 'function') {
+            loading.hide();
+        }
     }
 }
 
@@ -769,7 +967,12 @@ async function deleteReview(reviewId) {
 // ==================== BANNER IMAGE HANDLING ====================
 
 async function handleBannerImageUpload(files) {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0) {
+        console.warn('❌ No files selected');
+        return;
+    }
+
+    console.log('🖼️ Banner upload started:', files.length, 'files');
 
     const totalImages = bannerImageUrls.length + files.length;
     if (totalImages > 3) {
@@ -778,63 +981,157 @@ async function handleBannerImageUpload(files) {
     }
 
     loading.show();
+    
     try {
-        console.log('Starting upload for', files.length, 'files');
+        // Upload all images in sequence to avoid server overload
+        const uploadedUrls = [];
         
-        // Upload all images in parallel for better performance
-        const uploadPromises = Array.from(files).map(async (file, index) => {
+        for (let index = 0; index < files.length; index++) {
+            const file = files[index];
             try {
-                console.log(`Uploading file ${index + 1}/${files.length}:`, file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
-                // Use uploadProductImage which uses Supabase Storage (faster than base64)
+                console.log(`[${index + 1}/${files.length}] Processing:`, file.name, `(${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+                
                 const imageUrl = await uploadProductImage(file);
-                console.log(`Upload ${index + 1} result:`, imageUrl ? 'SUCCESS' : 'FAILED');
-                return imageUrl;
+                uploadedUrls.push(imageUrl);
+                
+                console.log(`[${index + 1}/${files.length}] ✅ Success`);
             } catch (error) {
-                console.error(`Error uploading file ${index + 1}:`, error);
+                console.error(`[${index + 1}/${files.length}] ❌ Failed:`, error.message);
                 utils.notify(`❌ فشل رفع صورة ${index + 1}: ${error.message}`, 'error');
-                return null;
             }
-        });
+        }
         
-        const uploadedUrls = await Promise.all(uploadPromises);
-        const successfulUploads = uploadedUrls.filter(url => url !== null);
-        
-        if (successfulUploads.length > 0) {
-            bannerImageUrls.push(...successfulUploads);
+        if (uploadedUrls.length > 0) {
+            console.log('Adding', uploadedUrls.length, 'URLs to bannerImageUrls');
+            bannerImageUrls.push(...uploadedUrls);
+            console.log('Total banner images now:', bannerImageUrls.length);
+            
+            // Save to localStorage as backup
+            localStorage.setItem('bannerImageUrls_backup', JSON.stringify(bannerImageUrls));
+            console.log('Saved to localStorage backup');
+            
             renderBannerPreviews();
-            utils.notify(`✅ تم رفع ${successfulUploads.length} من ${files.length} صورة بنجاح! لا تنسَ الضغط على "حفظ الإعدادات" لحفظها.`, 'success');
+            
+            const successMsg = uploadedUrls.length === 1 
+                ? `✅ تم رفع الصورة بنجاح! (${uploadedUrls.length}/${files.length})`
+                : `✅ تم رفع ${uploadedUrls.length} من ${files.length} صور بنجاح!`;
+            utils.notify(successMsg + ' - لا تنسَ الضغط على "حفظ الإعدادات"', 'success');
         } else {
-            utils.notify('❌ فشل رفع جميع الصور', 'error');
+            utils.notify('❌ فشل رفع جميع الصور. تحقق من الصيغة والحجم.', 'error');
         }
     } catch (error) {
-        console.error('Error uploading banner images:', error);
-        utils.notify('❌ خطأ في رفع الصور: ' + (error.message || 'حدث خطأ غير متوقع'), 'error');
+        console.error('❌ Unexpected error in handleBannerImageUpload:', error);
+        utils.notify('❌ خطأ غير متوقع: ' + error.message, 'error');
     } finally {
-        document.getElementById('adBannerFiles').value = ''; // Reset file input
+        const fileInput = document.getElementById('adBannerFiles');
+        if (fileInput) {
+            fileInput.value = '';
+            console.log('File input cleared');
+        }
         loading.hide();
+        console.log('🖼️ Banner upload completed');
     }
 }
 
 function renderBannerPreviews() {
     const container = document.getElementById('adBannersPreviewContainer');
-    if (!container) return;
+    
+    console.log('━━━━━━━━━━━━━━ 🎨 RENDER BANNER PREVIEWS START ━━━━━━━━━━━━━━');
+    console.log('Container element:', container);
+    console.log('Container ID:', container ? container.id : 'NOT FOUND');
+    console.log('bannerImageUrls:', bannerImageUrls);
+    console.log('bannerImageUrls is array?:', Array.isArray(bannerImageUrls));
+    console.log('bannerImageUrls length:', bannerImageUrls.length);
+    
+    if (!container) {
+        console.error('❌ CRITICAL: Banner preview container not found in DOM!');
+        console.log('Trying to find by class: adBannersPreviewContainer');
+        const byClass = document.querySelector('.adBannersPreviewContainer');
+        console.log('Found by class?:', byClass);
+        return;
+    }
 
-    if (bannerImageUrls.length === 0) {
+    if (!bannerImageUrls || bannerImageUrls.length === 0) {
+        console.log('📭 No banner images to display');
         container.innerHTML = '<p class="text-gray-400 text-sm text-center col-span-full">لم يتم رفع أي صور بعد.</p>';
         return;
     }
 
-    container.innerHTML = bannerImageUrls.map((url, index) => `
-        <div class="relative group">
-            <img src="${url}" class="w-full h-24 object-cover rounded-md border">
-            <button onclick="deleteBannerImage(${index})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs">X</button>
-        </div>
-    `).join('');
+    try {
+        let htmlContent = '';
+        let validImageCount = 0;
+        
+        bannerImageUrls.forEach((url, index) => {
+            console.log(`\n--- Processing image ${index + 1} ---`);
+            console.log('URL type:', typeof url);
+            console.log('URL length:', url.length);
+            console.log('URL preview:', url.substring(0, 100));
+            
+            // Validate URL
+            if (!url) {
+                console.warn(`⚠️ Skipping empty URL at index ${index}`);
+                return;
+            }
+            
+            const isBase64 = url.startsWith('data:');
+            const isValidUrl = url.startsWith('http');
+            
+            console.log(`isBase64: ${isBase64}, isValidUrl: ${isValidUrl}`);
+            
+            if (!isBase64 && !isValidUrl) {
+                console.warn(`❌ INVALID URL format at index ${index}`);
+                return;
+            }
+            
+            validImageCount++;
+            
+            const preview = `
+                <div class="relative group">
+                    <img src="${url}" 
+                         alt="بانر ${index + 1}" 
+                         class="w-full h-24 object-cover rounded-md border"
+                         onerror="console.error('Failed to load banner image at index ${index}'); this.style.border='2px solid red';">
+                    <button onclick="deleteBannerImage(${index})" 
+                            type="button"
+                            class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold">
+                        ✕
+                    </button>
+                </div>
+            `;
+            
+            htmlContent += preview;
+        });
+        
+        console.log(`\n✅ Valid images found: ${validImageCount} out of ${bannerImageUrls.length}`);
+        
+        if (htmlContent) {
+            container.innerHTML = htmlContent;
+            console.log('✅ HTML rendered successfully');
+            console.log('Container HTML length:', container.innerHTML.length);
+        } else {
+            console.warn('⚠️ All images were invalid');
+            container.innerHTML = '<p class="text-yellow-500 text-sm text-center col-span-full">⚠️ جميع الصور غير صحيحة</p>';
+        }
+    } catch (error) {
+        console.error('❌ ERROR rendering banner previews:', error);
+        console.error('Error stack:', error.stack);
+        container.innerHTML = '<p class="text-red-400 text-sm text-center col-span-full">❌ خطأ في عرض الصور</p>';
+    }
+    
+    console.log('━━━━━━━━━━━━━━ 🎨 RENDER BANNER PREVIEWS END ━━━━━━━━━━━━━━');
 }
 
 function deleteBannerImage(index) {
     if (confirm('هل تريد حذف هذه الصورة؟')) {
+        const deletedUrl = bannerImageUrls[index];
         bannerImageUrls.splice(index, 1);
+        
+        // Log deletion
+        console.log('🗑️ Deleted banner image at index', index);
+        if (deletedUrl && deletedUrl.startsWith('data:')) {
+            console.log('Freed up memory:', (deletedUrl.length / 1024 / 1024).toFixed(2), 'MB');
+        }
+        
         renderBannerPreviews();
     }
 }
@@ -1131,18 +1428,82 @@ function closeEditProductModal() {
 async function testSupabaseStorage() {
     try {
         const response = await fetch(
-            `${window.SUPABASE_CONFIG.URL}/storage/v1/bucket/restaurant`,
+            `${window.SUPABASE_CONFIG.URL}/storage/v1/bucket/restaurant-images`,
             {
                 method: 'GET',
                 headers: {
-                    'authorization': `Bearer ${window.SUPABASE_CONFIG.KEY}`
+                    'authorization': `Bearer ${window.SUPABASE_CONFIG.KEY}`,
+                    'apikey': window.SUPABASE_CONFIG.KEY
                 }
             }
         );
-        return response.ok;
+        console.log('Storage test response:', response.status);
+        return response.ok || response.status === 200 || response.status === 301 || response.status === 302;
     } catch (error) {
+        console.warn('Storage test failed:', error.message);
         return false;
     }
+}
+
+// ==================== IMAGE COMPRESSION ====================
+
+/**
+ * Compress image using Canvas API
+ * Reduces image dimensions and quality to minimize file size
+ */
+async function compressImage(file, maxWidth = 1200, maxHeight = 1200, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            const img = new Image();
+            
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calculate new dimensions (maintain aspect ratio)
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round(height * (maxWidth / width));
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round(width * (maxHeight / height));
+                        height = maxHeight;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert canvas to blob with compression
+                canvas.toBlob(
+                    (blob) => {
+                        console.log('🗜️ Image compressed:',
+                            'Original:', (file.size / 1024 / 1024).toFixed(2), 'MB →',
+                            'Compressed:', (blob.size / 1024 / 1024).toFixed(2), 'MB',
+                            '| Ratio:', ((blob.size / file.size) * 100).toFixed(1) + '%'
+                        );
+                        resolve(blob);
+                    },
+                    'image/jpeg',
+                    quality
+                );
+            };
+            
+            img.onerror = () => reject(new Error('فشل تحميل الصورة'));
+            img.src = e.target.result;
+        };
+        
+        reader.onerror = () => reject(new Error('فشل قراءة الملف'));
+        reader.readAsDataURL(file);
+    });
 }
 
 async function uploadProductImage(file) {
@@ -1153,63 +1514,53 @@ async function uploadProductImage(file) {
         throw new Error('الملف المختار ليس صورة');
     }
     
-    // File size validation removed - allowing all image sizes
-    
-    const fileName = `product-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
-    
     try {
-        // Method 1: Try Supabase Storage first
-        const storageAvailable = await testSupabaseStorage();
+        console.log('📸 Starting image processing:', file.name, 'Original Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         
-        if (storageAvailable) {
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                const uploadResponse = await fetch(
-                    `${window.SUPABASE_CONFIG.URL}/storage/v1/object/restaurant-images/${fileName}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'apikey': window.SUPABASE_CONFIG.KEY,
-                            'Authorization': `Bearer ${window.SUPABASE_CONFIG.KEY}`,
-                            'x-upsert': 'true'
-                        },
-                        body: formData
-                    }
-                );
-                
-                if (uploadResponse.ok) {
-                    const publicUrl = `${window.SUPABASE_CONFIG.URL}/storage/v1/object/public/restaurant-images/${fileName}`;
-                    console.log('✅ Image uploaded to Supabase Storage:', publicUrl);
-                    return publicUrl;
-                } else {
-                    console.warn('Upload response not ok:', uploadResponse.status, uploadResponse.statusText);
-                }
-            } catch (storageError) {
-                console.warn('Supabase Storage upload failed:', storageError.message);
-            }
-        } else {
-            console.warn('Supabase Storage not available, using Base64 fallback');
+        // Compress image first
+        let processedFile = file;
+        if (file.size > 500000) { // If larger than 500KB, compress it
+            console.log('🗜️ Image is large, compressing...');
+            processedFile = await compressImage(file, 1000, 1000, 0.75);
         }
         
-        // Method 2: Convert to Base64 (fallback for server issues)
+        console.log('📎 Converting image to Base64 (Supabase Storage bucket not available)...');
+        
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 const base64String = e.target.result;
-                console.log('📎 Image converted to Base64 (length:', base64String.length, ')');
+                console.log('✅ Image converted to Base64, size:', (base64String.length / 1024).toFixed(2), 'KB');
                 resolve(base64String);
             };
-            reader.onerror = function() {
-                reject(new Error('فشل قراءة الصورة'));
-            };
-            reader.readAsDataURL(file);
+            reader.onerror = () => reject(new Error('فشل قراءة الصورة'));
+            reader.readAsDataURL(processedFile);
         });
         
     } catch (error) {
-        console.error('Error uploading image:', error);
-        throw new Error('فشل رفع الصورة: ' + error.message);
+        console.error('Processing error:', error);
+        
+        // Try to compress before fallback
+        try {
+            let compressedFile = file;
+            if (file.size > 500000) {
+                compressedFile = await compressImage(file, 1000, 1000, 0.75);
+            }
+            
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64String = e.target.result;
+                    console.log('✅ Image converted to Base64, size:', (base64String.length / 1024).toFixed(2), 'KB');
+                    resolve(base64String);
+                };
+                reader.onerror = () => reject(new Error('فشل قراءة الصورة'));
+                reader.readAsDataURL(compressedFile);
+            });
+        } catch (compressError) {
+            console.error('Compression also failed:', compressError);
+            throw error;
+        }
     }
 }
 
@@ -1339,29 +1690,28 @@ async function uploadLogo() {
         return;
     }
 
-    // File size validation removed - allowing all image sizes
-
     loading.show();
     try {
-        const fileName = `logo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
+        console.log('Uploading logo:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         
-        // Upload logic here - depending on your storage solution
-        // For now, we'll use a data URL
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                document.getElementById('restLogo').value = e.target.result;
-                updateLogoPreview(e.target.result);
-                utils.notify('✅ تم تحديث معاينة الصورة', 'success');
-                fileInput.value = '';
-            } finally {
-                loading.hide();
-            }
-        };
-        reader.readAsDataURL(file);
+        // Upload image using uploadProductImage which handles storage properly
+        const imageUrl = await uploadProductImage(file);
+        
+        // Set the URL in the input field
+        const logoInput = document.getElementById('restLogo');
+        if (logoInput) {
+            logoInput.value = imageUrl;
+        }
+        
+        // Update preview
+        updateLogoPreview(imageUrl);
+        
+        utils.notify('✅ تم رفع الصورة بنجاح', 'success');
+        fileInput.value = '';
     } catch (error) {
         console.error('Error uploading logo:', error);
-        utils.notify('❌ خطأ في رفع الصورة', 'error');
+        utils.notify('❌ خطأ في رفع الصورة: ' + error.message, 'error');
+    } finally {
         loading.hide();
     }
 }

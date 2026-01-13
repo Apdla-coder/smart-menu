@@ -6,10 +6,62 @@
     <title>لوحة التحكم - إدارة المطعم</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            color-scheme: dark;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #161b26 100%);
+            color: #e0e0e0;
+        }
+        
         .modal { display: none !important; }
         .modal.active { display: flex !important; align-items: center; justify-content: center; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2; }
+        
+        /* Dark Mode Inputs */
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="url"], textarea, select {
+            background-color: #1e2330 !important;
+            color: #e0e0e0 !important;
+            border-color: #2a3142 !important;
+        }
+        
+        input[type="file"] {
+            background-color: #1e2330 !important;
+            color: #e0e0e0 !important;
+        }
+        
+        input::placeholder, textarea::placeholder {
+            color: #888888 !important;
+        }
+        
+        input[readonly] {
+            background-color: #161b26 !important;
+            border-color: #2a3142 !important;
+        }
+        
+        /* Dark Mode Cards and Containers */
+        .bg-white {
+            background-color: #1a202c !important;
+            color: #e0e0e0 !important;
+        }
+        
+        .bg-gray-50, .bg-gray-100, .bg-gray-200 {
+            background-color: #161b26 !important;
+        }
+        
+        .border-gray-200, .border-gray-300 {
+            border-color: #2a3142 !important;
+        }
+        
+        .text-gray-600, .text-gray-700, .text-gray-800 {
+            color: #ddd !important;
+        }
+        
+        .text-gray-400, .text-gray-500 {
+            color: #888888 !important;
+        }
         
         /* Performance Optimizations */
         img { loading: lazy; }
@@ -131,17 +183,17 @@
         </div>
     </div>
 
-    <div id="loadingOverlay" class="hidden fixed inset-0 bg-white bg-opacity-75 backdrop-blur-sm z-40 flex flex-col items-center justify-center gap-3 text-amber-700">
-        <svg class="animate-spin h-10 w-10 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-md z-40 flex flex-col items-center justify-center gap-3 text-blue-400">
+        <svg class="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
         </svg>
         <p class="font-medium">جارٍ جلب البيانات...</p>
     </div>
 
-    <div class="min-h-screen">
+    <div class="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
         <!-- Header -->
-        <header class="bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg">
+        <header class="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white shadow-2xl border-b border-blue-600/30">
             <div class="container mx-auto px-4 py-6">
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <div>
@@ -149,10 +201,10 @@
                         <p class="text-sm text-amber-100">مرحباً <span id="userName">مستخدم</span></p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openMenuLink()" class="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 text-sm md:text-base">
+                        <button onclick="openMenuLink()" class="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-600 text-sm md:text-base font-medium transition-colors shadow-md">
                             👁️ عرض القائمة
                         </button>
-                        <button onclick="copyMenuLink()" class="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 text-sm md:text-base">
+                        <button onclick="copyMenuLink()" class="bg-cyan-500 px-4 py-2 rounded-lg hover:bg-cyan-600 text-sm md:text-base font-medium transition-colors shadow-md">
                             📋 نسخ الرابط
                         </button>
                         <button id="logoutBtn" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 text-sm md:text-base">
@@ -165,18 +217,18 @@
 
         <div class="container mx-auto px-4 py-8">
             <!-- Tabs -->
-            <div class="bg-white rounded-lg shadow-md mb-6">
-                <div class="flex border-b overflow-x-auto">
-                    <button onclick="showTab('categories')" id="tabCategories" class="flex-1 px-4 md:px-6 py-4 font-semibold border-b-2 border-amber-600 text-amber-600 whitespace-nowrap">
+            <div class="bg-slate-800 rounded-xl shadow-xl mb-6 overflow-hidden border border-slate-700/50">
+                <div class="flex border-b border-slate-700 overflow-x-auto">
+                    <button onclick="showTab('categories')" id="tabCategories" class="flex-1 px-4 md:px-6 py-4 font-semibold border-b-3 border-blue-500 text-blue-400 whitespace-nowrap hover:bg-slate-700/50 transition-colors">
                         📂 الفئات
                     </button>
-                    <button onclick="showTab('products')" id="tabProducts" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                    <button onclick="showTab('products')" id="tabProducts" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-400 hover:text-blue-400 hover:bg-slate-700/50 whitespace-nowrap transition-colors">
                         🛍️ المنتجات
                     </button>
-                    <button onclick="showTab('settings')" id="tabSettings" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                    <button onclick="showTab('settings')" id="tabSettings" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-400 hover:text-blue-400 hover:bg-slate-700/50 whitespace-nowrap transition-colors">
                         ⚙️ الإعدادات
                     </button>
-                    <button onclick="showTab('reviews')" id="tabReviews" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                    <button onclick="showTab('reviews')" id="tabReviews" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-400 hover:text-blue-400 hover:bg-slate-700/50 whitespace-nowrap transition-colors">
                         ⭐ التقييمات
                     </button>
                 </div>
@@ -184,69 +236,69 @@
 
             <!-- Categories Tab -->
             <div id="categoriesTab" class="space-y-6">
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">➕ إضافة فئة جديدة</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">➕ إضافة فئة جديدة</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" id="catNameAr" placeholder="اسم الفئة بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                        <input type="text" id="catNameEn" placeholder="Category Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <input type="text" id="catNameAr" placeholder="اسم الفئة بالعربي *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                        <input type="text" id="catNameEn" placeholder="Category Name (English)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                     </div>
                     
                     <!-- Image Upload Section -->
-                    <div class="mt-4 space-y-3 border rounded-lg p-4 bg-gray-50">
-                        <h4 class="font-semibold text-sm">📸 صورة الفئة (اختياري)</h4>
+                    <div class="mt-4 space-y-3 border rounded-lg p-4 bg-slate-700 border-slate-600">
+                        <h4 class="font-semibold text-sm text-gray-200">📸 صورة الفئة (اختياري)</h4>
                         <div class="flex items-center gap-3">
                             <input type="file" id="catImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateNewCategoryImagePreview(this)">
                             <img id="catImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
                         </div>
-                        <button type="button" onclick="uploadNewCategoryImage()" class="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 text-sm font-medium">
+                        <button type="button" onclick="uploadNewCategoryImage()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
                             📤 رفع الصورة
                         </button>
                     </div>
                     
-                    <button onclick="addCategory()" class="mt-4 bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 w-full md:w-auto">
+                    <button onclick="addCategory()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto font-medium transition-colors shadow-md">
                         ➕ إضافة الفئة
                     </button>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">📋 الفئات الموجودة (<span id="categoriesCount">0</span>)</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">📋 الفئات الموجودة (<span id="categoriesCount">0</span>)</h2>
                     <div id="categoriesList" class="space-y-3"></div>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">📂 إضافة قسم إلى فئة</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">📂 إضافة قسم إلى فئة</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select id="sectionCategorySelect" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <select id="sectionCategorySelect" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white">
                             <option value="">اختر الفئة *</option>
                         </select>
-                        <input type="text" id="newSectionInput" placeholder="اسم القسم الجديد *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <input type="text" id="newSectionInput" placeholder="اسم القسم الجديد *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                     </div>
-                    <button onclick="quickAddSection()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto">
+                    <button onclick="quickAddSection()" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto font-medium transition-colors shadow-md">
                         ➕ إضافة القسم
                     </button>
-                    <div id="selectedCategorySections" class="mt-6 p-4 bg-gray-50 rounded-lg border hidden">
-                        <p class="font-semibold mb-3">الأقسام الحالية:</p>
+                    <div id="selectedCategorySections" class="mt-6 p-4 bg-slate-700 rounded-lg border border-slate-600 hidden">
+                        <p class="font-semibold mb-3 text-gray-200">الأقسام الحالية:</p>
                         <div id="sectionsList" class="space-y-2"></div>
                     </div>
                 </div>
             </div>            <div id="productsTab" class="hidden space-y-6">
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">➕ إضافة منتج جديد</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">➕ إضافة منتج جديد</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select id="prodCategory" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <select id="prodCategory" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white">
                             <option value="">اختر الفئة *</option>
                         </select>
-                        <select id="prodSection" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <select id="prodSection" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white">
                             <option value="">اختر القسم (اختياري)</option>
                         </select>
-                        <input type="text" id="prodNameAr" placeholder="اسم المنتج بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                        <input type="text" id="prodNameEn" placeholder="Product Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                        <input type="number" step="0.01" id="prodPrice" placeholder="السعر *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                        <textarea id="prodDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2 focus:border-amber-500 focus:outline-none" rows="2"></textarea>
+                        <input type="text" id="prodNameAr" placeholder="اسم المنتج بالعربي *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                        <input type="text" id="prodNameEn" placeholder="Product Name (English)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                        <input type="number" step="0.01" id="prodPrice" placeholder="السعر *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                        <textarea id="prodDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2 focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400" rows="2"></textarea>
                         
                         <!-- Image Upload Section -->
-                        <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
-                            <h4 class="font-semibold text-sm">📸 صورة المنتج (اختياري)</h4>
+                        <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-slate-700 border-slate-600">
+                            <h4 class="font-semibold text-sm text-gray-200">📸 صورة المنتج (اختياري)</h4>
                             <div class="flex items-center gap-3">
                                 <input type="file" id="prodImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateImagePreview(this)">
                                 <img id="prodImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
@@ -260,19 +312,19 @@
                             </label>
                         </div>
                     </div>
-                    <button onclick="addProduct()" class="mt-4 bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 w-full md:w-auto">
+                    <button onclick="addProduct()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto font-medium transition-colors shadow-md">
                         ➕ إضافة المنتج
                     </button>
                 </div>
 
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
-                        <h2 class="text-xl md:text-2xl font-bold">📦 المنتجات (<span id="productsCount">0</span>)</h2>
+                        <h2 class="text-xl md:text-2xl font-bold text-blue-400">📦 المنتجات (<span id="productsCount">0</span>)</h2>
                         <div class="flex gap-2 flex-wrap">
-                            <select id="filterCategory" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm">
+                            <select id="filterCategory" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm bg-slate-700 text-white">
                                 <option value="all">كل الفئات</option>
                             </select>
-                            <select id="filterSection" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm">
+                            <select id="filterSection" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm bg-slate-700 text-white">
                                 <option value="all">كل الأقسام</option>
                             </select>
                         </div>
@@ -284,8 +336,8 @@
             <!-- Settings Tab -->
             <div id="settingsTab" class="hidden space-y-6">
                 <!-- Account Security -->
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">🔐 أمان الحساب</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">🔐 أمان الحساب</h2>
                     <div class="space-y-6">
                         <!-- Email Section -->
                         <form onsubmit="event.preventDefault(); updateEmail();" class="border-b pb-6">
@@ -334,7 +386,7 @@
                                     <input type="password" id="confirmPassword" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" required>
                                 </div>
                                 <p class="text-xs text-gray-600 bg-amber-50 p-3 rounded-lg">⚠️ تأكد من أن كلمة المرور الجديدة قوية وتحتوي على أحرف كبيرة وصغيرة وأرقام</p>
-                                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium transition-colors">
+                                <button type="submit" class="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 font-medium transition-colors shadow-md">
                                     ✅ تحديث كلمة المرور
                                 </button>
                             </div>
@@ -343,21 +395,21 @@
                 </div>
 
                 <!-- Restaurant Basic Info -->
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">🏪 معلومات المطعم</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">🏪 معلومات المطعم</h2>
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="restNameAr" placeholder="اسم المطعم بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                            <input type="text" id="restNameEn" placeholder="Restaurant Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                            <input type="text" id="restCurrency" placeholder="العملة (مثال: ج.م)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
-                            <input type="text" id="restWhatsapp" placeholder="رقم الواتساب (201234567890)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <input type="text" id="restNameAr" placeholder="اسم المطعم بالعربي *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                            <input type="text" id="restNameEn" placeholder="Restaurant Name (English)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                            <input type="text" id="restCurrency" placeholder="العملة (مثال: ج.م)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                            <input type="text" id="restWhatsapp" placeholder="رقم الواتساب (201234567890)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                         </div>
                     </div>
                 </div>
 
                 <!-- Social Media Links -->
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">📱 وسائل التواصل الاجتماعي</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">📱 وسائل التواصل الاجتماعي</h2>
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -378,7 +430,7 @@
                                 <div>
                                     <label for="adBannerFiles" class="block text-sm font-medium text-gray-700 mb-1">رفع صور جديدة</label>
                                     <input type="file" id="adBannerFiles" accept="image/*" multiple onchange="handleBannerImageUpload(this.files)" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
-                                    <p class="text-xs text-gray-500 mt-1">يمكنك تحديد أكثر من صورة في المرة الواحدة.</p>
+                                    <p class="text-xs text-gray-500 mt-1">💡 يمكنك تحديد صورة أو أكثر (حد أقصى 3 صور). الحجم الموصى به: أقل من 2 ميجابايت لكل صورة</p>
                                 </div>
                             </div>
                         </div>
@@ -413,8 +465,8 @@
                 </div>
 
                 <!-- Visual Identity & Theme -->
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-4">🎨 الهوية البصرية والمظهر</h2>
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4 text-blue-400">🎨 الهوية البصرية والمظهر</h2>
                     <div class="space-y-6">
                         <!-- Logo Section -->
                         <div class="border-b pb-6">
@@ -424,8 +476,8 @@
                                 <div>
                                     <label class="block text-sm font-medium mb-2">رفع الصورة</label>
                                     <div class="flex flex-col sm:flex-row gap-2">
-                                        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="flex-1 px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
-                                        <button onclick="uploadLogo()" id="uploadLogoBtn" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium text-sm transition-colors whitespace-nowrap">
+                                        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="flex-1 px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none text-sm file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                                        <button onclick="uploadLogo()" id="uploadLogoBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors whitespace-nowrap shadow-md">
                                             📤 رفع
                                         </button>
                                     </div>
@@ -464,7 +516,7 @@
                                 <!-- Preview Box -->
                                 <div>
                                     <label class="block text-sm font-medium mb-2">معاينة</label>
-                                    <div id="colorPreview" class="h-12 rounded-lg border-2 border-gray-300 flex items-center justify-center text-white font-bold">
+                                    <div id="colorPreview" class="h-12 rounded-lg border-2 border-gray-300 flex items-center justify-center text-white font-bold bg-blue-600">
                                         معاينة اللون
                                     </div>
                                 </div>
@@ -505,11 +557,11 @@
                 </div>
 
                 <!-- Save Button -->
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6 flex gap-3">
-                    <button onclick="saveSettings()" class="bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 font-semibold flex items-center gap-2 transition-colors">
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 flex gap-3 border border-slate-700/50">
+                    <button onclick="saveSettings()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold flex items-center gap-2 transition-colors shadow-md">
                         💾 حفظ جميع الإعدادات
                     </button>
-                    <button onclick="resetSettings()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold transition-colors">
+                    <button onclick="resetSettings()" class="bg-gray-400 text-white px-6 py-3 rounded-lg hover:bg-gray-500 font-semibold transition-colors shadow-md">
                         🔄 إعادة تعيين
                     </button>
                 </div>
@@ -517,17 +569,17 @@
 
             <!-- Reviews Tab -->
             <div id="reviewsTab" class="hidden space-y-6">
-                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
-                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                <div class="bg-slate-800 rounded-xl shadow-lg p-4 md:p-6 border border-slate-700/50">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2 text-blue-400">
                         ⭐ تقييمات العملاء
-                        <span class="text-sm font-normal text-gray-600">(<span id="reviewsCount">0</span> تقييم)</span>
+                        <span class="text-sm font-normal text-gray-400">(<span id="reviewsCount">0</span> تقييم)</span>
                     </h2>
 
                     <!-- Filter Buttons -->
                     <div class="flex flex-wrap gap-2 mb-6">
-                        <button onclick="filterReviews('all')" id="filterAllBtn" class="px-4 py-2 rounded-lg bg-amber-100 text-amber-700 font-semibold border border-amber-300 ring-2 ring-amber-500 ring-offset-2">📊 الكل</button>
-                        <button onclick="filterReviews('pending')" id="filterPendingBtn" class="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold border border-yellow-300">⏳ قيد المراجعة</button>
-                        <button onclick="filterReviews('approved')" id="filterApprovedBtn" class="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-300">✅ موافق عليه</button>
+                        <button onclick="filterReviews('all')" id="filterAllBtn" class="px-4 py-2 rounded-lg bg-blue-600/20 text-blue-400 font-semibold border border-blue-500 ring-2 ring-blue-500 ring-offset-2 ring-offset-slate-800">📊 الكل</button>
+                        <button onclick="filterReviews('pending')" id="filterPendingBtn" class="px-4 py-2 rounded-lg bg-yellow-600/20 text-yellow-400 font-semibold border border-yellow-500 hover:bg-yellow-600/30 transition-colors">⏳ قيد المراجعة</button>
+                        <button onclick="filterReviews('approved')" id="filterApprovedBtn" class="px-4 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 font-semibold border border-emerald-500 hover:bg-emerald-600/30 transition-colors">✅ موافق عليه</button>
                     </div>
 
                     <!-- Reviews List -->
@@ -1002,6 +1054,18 @@
             }
         }
     </script>
+    <!-- Footer -->
+    <footer class="bg-black/50 backdrop-blur-sm text-gray-400 text-center py-6 mt-10 border-t border-gray-700/50">
+        <div class="max-w-4xl mx-auto px-4">
+            <p class="mb-2 text-sm">تم التطوير بواسطة شركة العبد للبرمجيات</p>
+            <p class="mb-2 text-sm">Developed by Al-Abd Software Company</p>
+            <p class="mb-2 text-sm">م. عبدالله هاني</p>
+            <p class="mb-2 text-sm">Eng. Abdullah Hani</p>
+            <p class="mb-2 text-sm">ت. 01220200747</p>
+            <p class="mb-3 text-sm">Tel. 01220200747</p>
+            <p class="text-xs border-t border-gray-700 pt-3">جميع الحقوق محفوظة © | All Rights Reserved ©</p>
+        </div>
+    </footer>
 </body>
 </html>
 

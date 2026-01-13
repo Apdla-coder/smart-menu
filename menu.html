@@ -220,6 +220,7 @@ body {
     height: 200px;
     background-color: #0e1f25;
     color: #ffffff;
+    margin-bottom: 10px;
 }
 
 /* Category Card Improvements */
@@ -380,7 +381,7 @@ body {
 }
 
 #selectedCategoryTitle {
-    color: #10b981 !important;
+    color: var(--primary-color) !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     font-weight: 800;
 }
@@ -1252,7 +1253,7 @@ allSections.forEach(section => {
     if (productsBySection[section]) {
         html += `
 <div class="section-group mb-6">
-<h3 class="section-title text-lg font-bold mb-3 px-2" style="color: var(--primary-color);">
+<h3 class="section-title text-lg font-bold mb-3 px-2" style="color:var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem;">
 ${section}
 </h3>
 <div class="products-grid" style="background-color: var(--primary-color-light);">">
@@ -1282,7 +1283,7 @@ function renderProductCard(product, index) {
                 ` : `
                     <div class="fallback-thumb">🍽️</div>
                 `}
-                ${product.is_featured ? '<span class="badge-featured">⭐ مميز</span>' : ''}
+                ${product.is_featured ? '<span class="badge-featured" style="top:0;right: 145px;">⭐ مميز</span>' : ''}
             </div>
             <div class="product-content">
                 <div class="product-header">
@@ -2038,6 +2039,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         </div>
     </div>
 </div>
+
 
 </body>
 </html>

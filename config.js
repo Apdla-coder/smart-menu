@@ -6,7 +6,7 @@ if (!window.SUPABASE_CONFIG) {
     window.SUPABASE_CONFIG = {
         URL: localStorage.getItem('supabaseUrl') || 'https://putgtsdgeyqyptamwpnx.supabase.co',
         KEY: localStorage.getItem('supabaseKey') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGd0c2RnZXlxeXB0YW13cG54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODMxMzAsImV4cCI6MjA4Mjk1OTEzMH0.bo30DP6UxtpHSvKTCwtaUmkJR8aT-BNEhyrW35IKsVE',
-        TIMEOUT: 8000 // 8 seconds - optimized for Cloudflare
+        TIMEOUT: 20000 // 20 seconds - increased for heavy operations with images
     };
 }
 
