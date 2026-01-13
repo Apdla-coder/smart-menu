@@ -54,7 +54,9 @@ async function loadMenu() {
         utils.notify('❌ خطأ في تحميل القائمة', 'error');
     } finally {
         loading.hide();
-    
+    }
+}
+
 /**
  * Setup UI interactions
  */

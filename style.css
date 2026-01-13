@@ -26,13 +26,13 @@ body {
     --secondary-color: #aee9f2;
     --accent-color: #eafafd;
     --card-background: #ffffff;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --border-color: #e5e7eb;
-    --shadow-color: rgba(0, 0, 0, 0.08);
-    --shadow-hover: rgba(0, 0, 0, 0.15);
-    --rating-active: #5bbfc6;
-    --rating-inactive: #d1d5db;
+    --text-primary: #ea580c;
+    --text-secondary: #f97316;
+    --border-color: #fed7aa;
+    --shadow-color: rgba(249, 115, 22, 0.08);
+    --shadow-hover: rgba(249, 115, 22, 0.15);
+    --rating-active: #f97316;
+    --rating-inactive: #fee2e2;
 }
 
 /* ==================== UTILITY CLASSES ==================== */
@@ -653,16 +653,16 @@ select:focus {
 }
 
 .product-card {
-    background: white;
-    border-radius: 1.25rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    background: #0e1f25 !important;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px var(--shadow-color);
+    transition: all .3s cubic-bezier(.23, 1, .32, 1);
     overflow: hidden;
-    cursor: pointer;
     display: flex;
     flex-direction: row;
-    align-items: stretch;
-    min-height: 180px;
+    border: 1px solid var(--border-color);
+    position: relative;
+    animation: fadeInUp .6s ease-out both;
 }
 
 .product-card:hover {
@@ -719,6 +719,8 @@ select:focus {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    background-color: #0e1f25;
+    color: #ddd !important;
 }
 
 .product-header {
@@ -729,21 +731,21 @@ select:focus {
 .product-name {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: white !important;
     margin-bottom: 0.25rem;
     line-height: 1.4;
 }
 
 .product-name-en {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: white !important;
     font-weight: 400;
     margin-bottom: 0.5rem;
 }
 
 .product-description {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: wheat;
     line-height: 1.6;
     margin-top: 0.5rem;
     margin-bottom: 0;
