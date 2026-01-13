@@ -1,0 +1,130 @@
+section,table_name,column_name,data_type,is_nullable,column_default,constraint_type,foreign_table,foreign_column
+=== TABLES ===,null,null,null,null,null,null,null,null
+FOREIGN KEY,categories,restaurant_id,null,null,null,FOREIGN KEY,restaurants,id
+FOREIGN KEY,products,category_id,null,null,null,FOREIGN KEY,categories,id
+FOREIGN KEY,products,restaurant_id,null,null,null,FOREIGN KEY,restaurants,id
+FOREIGN KEY,restaurant_settings,restaurant_id,null,null,null,FOREIGN KEY,restaurants,id
+FOREIGN KEY,reviews,restaurant_id,null,null,null,FOREIGN KEY,restaurants,id
+FOREIGN KEY,users,restaurant_id,null,null,null,FOREIGN KEY,restaurants,id
+INDEX,categories,categories_pkey,CREATE UNIQUE INDEX categories_pkey ON public.categories USING btree (id),null,null,INDEX,null,null
+INDEX,categories,idx_categories_active,CREATE INDEX idx_categories_active ON public.categories USING btree (is_active),null,null,INDEX,null,null
+INDEX,categories,idx_categories_pkey,CREATE UNIQUE INDEX idx_categories_pkey ON public.categories USING btree (id),null,null,INDEX,null,null
+INDEX,categories,idx_categories_restaurant_id,CREATE INDEX idx_categories_restaurant_id ON public.categories USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,categories,idx_categories_restaurant_id_active,"CREATE INDEX idx_categories_restaurant_id_active ON public.categories USING btree (restaurant_id, is_active)",null,null,INDEX,null,null
+INDEX,categories,idx_categories_restaurant_id_display,"CREATE INDEX idx_categories_restaurant_id_display ON public.categories USING btree (restaurant_id, display_order)",null,null,INDEX,null,null
+INDEX,categories,idx_categories_sections,CREATE INDEX idx_categories_sections ON public.categories USING gin (sections),null,null,INDEX,null,null
+INDEX,products,idx_products_available,CREATE INDEX idx_products_available ON public.products USING btree (is_available),null,null,INDEX,null,null
+INDEX,products,idx_products_category,CREATE INDEX idx_products_category ON public.products USING btree (category_id),null,null,INDEX,null,null
+INDEX,products,idx_products_pkey,CREATE UNIQUE INDEX idx_products_pkey ON public.products USING btree (id),null,null,INDEX,null,null
+INDEX,products,idx_products_restaurant_available,"CREATE INDEX idx_products_restaurant_available ON public.products USING btree (restaurant_id, is_available)",null,null,INDEX,null,null
+INDEX,products,idx_products_restaurant_category,"CREATE INDEX idx_products_restaurant_category ON public.products USING btree (restaurant_id, category_id)",null,null,INDEX,null,null
+INDEX,products,idx_products_restaurant_display,"CREATE INDEX idx_products_restaurant_display ON public.products USING btree (restaurant_id, display_order)",null,null,INDEX,null,null
+INDEX,products,idx_products_restaurant_featured,"CREATE INDEX idx_products_restaurant_featured ON public.products USING btree (restaurant_id, is_featured)",null,null,INDEX,null,null
+INDEX,products,idx_products_restaurant_id,CREATE INDEX idx_products_restaurant_id ON public.products USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,products,products_pkey,CREATE UNIQUE INDEX products_pkey ON public.products USING btree (id),null,null,INDEX,null,null
+INDEX,restaurant_settings,idx_restaurant_settings_pkey,CREATE UNIQUE INDEX idx_restaurant_settings_pkey ON public.restaurant_settings USING btree (id),null,null,INDEX,null,null
+INDEX,restaurant_settings,idx_restaurant_settings_restaurant_id,CREATE INDEX idx_restaurant_settings_restaurant_id ON public.restaurant_settings USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,restaurant_settings,restaurant_settings_pkey,CREATE UNIQUE INDEX restaurant_settings_pkey ON public.restaurant_settings USING btree (id),null,null,INDEX,null,null
+INDEX,restaurant_settings,restaurant_settings_restaurant_id_key,CREATE UNIQUE INDEX restaurant_settings_restaurant_id_key ON public.restaurant_settings USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,restaurants,idx_restaurants_created_at,CREATE INDEX idx_restaurants_created_at ON public.restaurants USING btree (created_at DESC),null,null,INDEX,null,null
+INDEX,restaurants,idx_restaurants_pkey,CREATE UNIQUE INDEX idx_restaurants_pkey ON public.restaurants USING btree (id),null,null,INDEX,null,null
+INDEX,restaurants,restaurants_pkey,CREATE UNIQUE INDEX restaurants_pkey ON public.restaurants USING btree (id),null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_created_at,CREATE INDEX idx_reviews_created_at ON public.reviews USING btree (created_at DESC),null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_is_approved,CREATE INDEX idx_reviews_is_approved ON public.reviews USING btree (is_approved),null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_pkey,CREATE UNIQUE INDEX idx_reviews_pkey ON public.reviews USING btree (id),null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_restaurant_approved,"CREATE INDEX idx_reviews_restaurant_approved ON public.reviews USING btree (restaurant_id, is_approved)",null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_restaurant_created,"CREATE INDEX idx_reviews_restaurant_created ON public.reviews USING btree (restaurant_id, created_at DESC)",null,null,INDEX,null,null
+INDEX,reviews,idx_reviews_restaurant_id,CREATE INDEX idx_reviews_restaurant_id ON public.reviews USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,reviews,reviews_pkey,CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id),null,null,INDEX,null,null
+INDEX,users,idx_users_email,CREATE INDEX idx_users_email ON public.users USING btree (email),null,null,INDEX,null,null
+INDEX,users,idx_users_pkey,CREATE UNIQUE INDEX idx_users_pkey ON public.users USING btree (id),null,null,INDEX,null,null
+INDEX,users,idx_users_restaurant_active,"CREATE INDEX idx_users_restaurant_active ON public.users USING btree (restaurant_id, is_active)",null,null,INDEX,null,null
+INDEX,users,idx_users_restaurant_email,"CREATE UNIQUE INDEX idx_users_restaurant_email ON public.users USING btree (restaurant_id, email)",null,null,INDEX,null,null
+INDEX,users,idx_users_restaurant_id,CREATE INDEX idx_users_restaurant_id ON public.users USING btree (restaurant_id),null,null,INDEX,null,null
+INDEX,users,idx_users_restaurant_role,"CREATE INDEX idx_users_restaurant_role ON public.users USING btree (restaurant_id, role)",null,null,INDEX,null,null
+INDEX,users,users_pkey,CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id),null,null,INDEX,null,null
+PRIMARY KEY,categories,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,products,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,restaurant_settings,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,restaurants,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,reviews,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,users,id,null,null,null,PRIMARY KEY,null,null
+PRIMARY KEY,users,id,null,null,null,PRIMARY KEY,null,null
+TABLE,categories,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,categories,display_order,integer,YES,0,null,null,null
+TABLE,categories,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,categories,image_url,text,YES,null,null,null,null
+TABLE,categories,is_active,boolean,YES,true,null,null,null
+TABLE,categories,name_ar,text,NO,null,null,null,null
+TABLE,categories,name_en,text,YES,null,null,null,null
+TABLE,categories,restaurant_id,uuid,NO,null,null,null,null
+TABLE,categories,section,text,YES,null,null,null,null
+TABLE,categories,sections,jsonb,YES,'[]'::jsonb,null,null,null
+TABLE,categories,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,products,category_id,uuid,NO,null,null,null,null
+TABLE,products,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,products,description_ar,text,YES,null,null,null,null
+TABLE,products,description_en,text,YES,null,null,null,null
+TABLE,products,display_order,integer,YES,0,null,null,null
+TABLE,products,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,products,image_url,text,YES,null,null,null,null
+TABLE,products,is_available,boolean,YES,true,null,null,null
+TABLE,products,is_featured,boolean,YES,false,null,null,null
+TABLE,products,name_ar,text,NO,null,null,null,null
+TABLE,products,name_en,text,YES,null,null,null,null
+TABLE,products,price,numeric,NO,null,null,null,null
+TABLE,products,restaurant_id,uuid,NO,null,null,null,null
+TABLE,products,section,text,YES,null,null,null,null
+TABLE,products,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,restaurant_settings,ad_banner_urls,text,YES,null,null,null,null
+TABLE,restaurant_settings,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,restaurant_settings,currency,text,YES,'ج.م'::text,null,null,null
+TABLE,restaurant_settings,facebook_url,text,YES,null,null,null,null
+TABLE,restaurant_settings,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,restaurant_settings,instagram_url,text,YES,null,null,null,null
+TABLE,restaurant_settings,logo_url,text,YES,null,null,null,null
+TABLE,restaurant_settings,primary_color,text,YES,'#D97706'::text,null,null,null
+TABLE,restaurant_settings,restaurant_id,uuid,NO,null,null,null,null
+TABLE,restaurant_settings,restaurant_name_ar,text,NO,null,null,null,null
+TABLE,restaurant_settings,restaurant_name_en,text,YES,null,null,null,null
+TABLE,restaurant_settings,social_ad_image,text,YES,null,null,null,null
+TABLE,restaurant_settings,social_ad_video,text,YES,null,null,null,null
+TABLE,restaurant_settings,tiktok_url,text,YES,null,null,null,null
+TABLE,restaurant_settings,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,restaurant_settings,whatsapp_number,text,YES,null,null,null,null
+TABLE,restaurants,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,restaurants,currency,text,YES,'ج.م'::text,null,null,null
+TABLE,restaurants,facebook_url,text,YES,null,null,null,null
+TABLE,restaurants,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,restaurants,instagram_url,text,YES,null,null,null,null
+TABLE,restaurants,logo_url,text,YES,null,null,null,null
+TABLE,restaurants,name_ar,text,NO,null,null,null,null
+TABLE,restaurants,name_en,text,YES,null,null,null,null
+TABLE,restaurants,primary_color,text,YES,'#D97706'::text,null,null,null
+TABLE,restaurants,tiktok_url,text,YES,null,null,null,null
+TABLE,restaurants,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,restaurants,whatsapp_number,text,YES,null,null,null,null
+TABLE,reviews,comment,text,YES,null,null,null,null
+TABLE,reviews,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,reviews,customer_city,text,NO,null,null,null,null
+TABLE,reviews,customer_governorate,text,NO,null,null,null,null
+TABLE,reviews,customer_name,text,NO,null,null,null,null
+TABLE,reviews,customer_phone,text,NO,null,null,null,null
+TABLE,reviews,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,reviews,is_approved,boolean,YES,false,null,null,null
+TABLE,reviews,place_rating,integer,NO,null,null,null,null
+TABLE,reviews,products_rating,integer,NO,null,null,null,null
+TABLE,reviews,restaurant_id,uuid,NO,null,null,null,null
+TABLE,reviews,service_rating,integer,NO,null,null,null,null
+TABLE,reviews,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,users,created_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null
+TABLE,users,email,text,NO,null,null,null,null
+TABLE,users,full_name,text,NO,null,null,null,null
+TABLE,users,id,uuid,NO,gen_random_uuid(),null,null,null
+TABLE,users,is_active,boolean,YES,true,null,null,null
+TABLE,users,last_login,timestamp with time zone,YES,null,null,null,null
+TABLE,users,password_hash,text,NO,null,null,null,null
+TABLE,users,phone,text,YES,null,null,null,null
+TABLE,users,restaurant_id,uuid,NO,null,null,null,null
+TABLE,users,role,text,YES,'staff'::text,null,null,null
+TABLE,users,updated_at,timestamp with time zone,YES,"timezone('utc'::text, now())",null,null,null

@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة المطعم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .modal { display: none !important; }
+        .modal.active { display: flex !important; align-items: center; justify-content: center; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-clamp: 2; }
+        
+        /* Performance Optimizations */
+        img { loading: lazy; }
+        .bg-gray-200 { content-visibility: auto; }
+        
+        /* Reduce repaints */
+        * {
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">✏️ تعديل الفئة</h3>
+            <input type="hidden" id="editCatId">
+            <div class="space-y-4">
+                <input type="text" id="editCatNameAr" placeholder="اسم الفئة بالعربي" class="w-full px-4 py-2 border rounded-lg">
+                <input type="text" id="editCatNameEn" placeholder="Category Name" class="w-full px-4 py-2 border rounded-lg">
+                
+                <!-- Image Upload Section -->
+                <div class="space-y-3 border rounded-lg p-4 bg-gray-50">
+                    <h4 class="font-semibold text-sm">📸 صورة الفئة</h4>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="editCatImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateCategoryImagePreview(this)">
+                        <img id="editCatImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
+                    </div>
+                    <button type="button" onclick="uploadCategoryImage()" class="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 text-sm font-medium">
+                        📤 رفع الصورة
+                    </button>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button onclick="updateCategory()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                        حفظ التعديلات
+                    </button>
+                    <button onclick="closeEditCategoryModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Sections Modal -->
+    <div id="manageSectionsModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">📂 إدارة الأقسام</h3>
+            <input type="hidden" id="manageSectionsCatId">
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="block font-semibold">إضافة قسم جديد:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newSectionName" placeholder="اسم القسم" class="flex-1 px-3 py-2 border rounded-lg">
+                        <button onclick="addSectionToCategory()" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700">
+                            ➕ إضافة
+                        </button>
+                    </div>
+                </div>
+                <div class="border-t pt-3">
+                    <label class="block font-semibold mb-2">الأقسام الحالية:</label>
+                    <div id="currentSectionsList" class="space-y-2"></div>
+                </div>
+                <button onclick="closeManageSectionsModal()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
+                    تم
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">✏️ تعديل المنتج</h3>
+            <input type="hidden" id="editProdId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <select id="editProdCategory" class="px-4 py-2 border rounded-lg">
+                    <option value="">اختر الفئة</option>
+                </select>
+                <select id="editProdSection" class="px-4 py-2 border rounded-lg">
+                    <option value="">اختر القسم (اختياري)</option>
+                </select>
+                <input type="text" id="editProdNameAr" placeholder="اسم المنتج بالعربي" class="px-4 py-2 border rounded-lg">
+                <input type="text" id="editProdNameEn" placeholder="Product Name" class="px-4 py-2 border rounded-lg">
+                <input type="number" step="0.01" id="editProdPrice" placeholder="السعر" class="px-4 py-2 border rounded-lg">
+                <textarea id="editProdDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-2" rows="2"></textarea>
+                
+                <!-- Image Upload Section -->
+                <div class="col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
+                    <h4 class="font-semibold text-sm">📸 صورة المنتج</h4>
+                    <div class="flex items-center gap-3">
+                        <input type="file" id="editProdImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateImagePreview(this)">
+                        <img id="editProdImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
+                    </div>
+                </div>
+
+                <div class="col-span-2">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="editProdFeatured" class="w-4 h-4">
+                        <span>منتج مميز ⭐</span>
+                    </label>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="updateProduct()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                    حفظ التعديلات
+                </button>
+                <button onclick="closeEditProductModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-white bg-opacity-75 backdrop-blur-sm z-40 flex flex-col items-center justify-center gap-3 text-amber-700">
+        <svg class="animate-spin h-10 w-10 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <p class="font-medium">جارٍ جلب البيانات...</p>
+    </div>
+
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg">
+            <div class="container mx-auto px-4 py-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold">🍽️ لوحة التحكم</h1>
+                        <p class="text-sm text-amber-100">مرحباً <span id="userName">مستخدم</span></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openMenuLink()" class="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 text-sm md:text-base">
+                            👁️ عرض القائمة
+                        </button>
+                        <button onclick="copyMenuLink()" class="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600 text-sm md:text-base">
+                            📋 نسخ الرابط
+                        </button>
+                        <button id="logoutBtn" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 text-sm md:text-base">
+                            🚪 تسجيل خروج
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-8">
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow-md mb-6">
+                <div class="flex border-b overflow-x-auto">
+                    <button onclick="showTab('categories')" id="tabCategories" class="flex-1 px-4 md:px-6 py-4 font-semibold border-b-2 border-amber-600 text-amber-600 whitespace-nowrap">
+                        📂 الفئات
+                    </button>
+                    <button onclick="showTab('products')" id="tabProducts" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                        🛍️ المنتجات
+                    </button>
+                    <button onclick="showTab('settings')" id="tabSettings" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                        ⚙️ الإعدادات
+                    </button>
+                    <button onclick="showTab('reviews')" id="tabReviews" class="flex-1 px-4 md:px-6 py-4 font-semibold text-gray-600 hover:text-amber-600 whitespace-nowrap">
+                        ⭐ التقييمات
+                    </button>
+                </div>
+            </div>
+
+            <!-- Categories Tab -->
+            <div id="categoriesTab" class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">➕ إضافة فئة جديدة</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="catNameAr" placeholder="اسم الفئة بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <input type="text" id="catNameEn" placeholder="Category Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                    </div>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="mt-4 space-y-3 border rounded-lg p-4 bg-gray-50">
+                        <h4 class="font-semibold text-sm">📸 صورة الفئة (اختياري)</h4>
+                        <div class="flex items-center gap-3">
+                            <input type="file" id="catImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateNewCategoryImagePreview(this)">
+                            <img id="catImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
+                        </div>
+                        <button type="button" onclick="uploadNewCategoryImage()" class="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 text-sm font-medium">
+                            📤 رفع الصورة
+                        </button>
+                    </div>
+                    
+                    <button onclick="addCategory()" class="mt-4 bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 w-full md:w-auto">
+                        ➕ إضافة الفئة
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">📋 الفئات الموجودة (<span id="categoriesCount">0</span>)</h2>
+                    <div id="categoriesList" class="space-y-3"></div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">📂 إضافة قسم إلى فئة</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <select id="sectionCategorySelect" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <option value="">اختر الفئة *</option>
+                        </select>
+                        <input type="text" id="newSectionInput" placeholder="اسم القسم الجديد *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <button onclick="quickAddSection()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 w-full md:w-auto">
+                        ➕ إضافة القسم
+                    </button>
+                    <div id="selectedCategorySections" class="mt-6 p-4 bg-gray-50 rounded-lg border hidden">
+                        <p class="font-semibold mb-3">الأقسام الحالية:</p>
+                        <div id="sectionsList" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>            <div id="productsTab" class="hidden space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">➕ إضافة منتج جديد</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <select id="prodCategory" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <option value="">اختر الفئة *</option>
+                        </select>
+                        <select id="prodSection" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <option value="">اختر القسم (اختياري)</option>
+                        </select>
+                        <input type="text" id="prodNameAr" placeholder="اسم المنتج بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <input type="text" id="prodNameEn" placeholder="Product Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <input type="number" step="0.01" id="prodPrice" placeholder="السعر *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        <textarea id="prodDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2 focus:border-amber-500 focus:outline-none" rows="2"></textarea>
+                        
+                        <!-- Image Upload Section -->
+                        <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
+                            <h4 class="font-semibold text-sm">📸 صورة المنتج (اختياري)</h4>
+                            <div class="flex items-center gap-3">
+                                <input type="file" id="prodImageFile" accept="image/*" class="flex-1 px-3 py-2 border rounded-lg text-sm" onchange="updateImagePreview(this)">
+                                <img id="prodImagePreview" src="" alt="معاينة" class="w-16 h-16 rounded border object-cover hidden">
+                            </div>
+                        </div>
+
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="prodFeatured" class="w-4 h-4">
+                                <span>منتج مميز ⭐</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button onclick="addProduct()" class="mt-4 bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 w-full md:w-auto">
+                        ➕ إضافة المنتج
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                        <h2 class="text-xl md:text-2xl font-bold">📦 المنتجات (<span id="productsCount">0</span>)</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <select id="filterCategory" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm">
+                                <option value="all">كل الفئات</option>
+                            </select>
+                            <select id="filterSection" onchange="filterProducts()" class="px-3 py-1 border rounded-lg text-sm">
+                                <option value="all">كل الأقسام</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="productsList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="hidden space-y-6">
+                <!-- Account Security -->
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">🔐 أمان الحساب</h2>
+                    <div class="space-y-6">
+                        <!-- Email Section -->
+                        <form onsubmit="event.preventDefault(); updateEmail();" class="border-b pb-6">
+                            <h3 class="text-lg font-semibold mb-4">📧 تغيير البريد الإلكتروني</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">البريد الإلكتروني الحالي</label>
+                                    <div class="flex gap-2">
+                                        <input type="email" id="currentEmail" placeholder="example@email.com" class="flex-1 px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" readonly style="background-color: #f3f4f6;">
+                                        <button type="button" onclick="copyEmail()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-medium transition-colors" title="نسخ البريد">
+                                            📋 نسخ
+                                        </button>
+                                        <button type="button" onclick="openEmail()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-medium transition-colors" title="فتح البريد">
+                                            ✉️ فتح
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">البريد الإلكتروني الجديد *</label>
+                                    <input type="email" id="newEmail" placeholder="newemail@example.com" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">أدخل كلمة المرور لتأكيد التغيير *</label>
+                                    <input type="password" id="emailConfirmPassword" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" autocomplete="current-password" required>
+                                </div>
+                                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors">
+                                    ✅ تحديث البريد الإلكتروني
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Password Section -->
+                        <form onsubmit="event.preventDefault(); updatePassword();">
+                            <h3 class="text-lg font-semibold mb-4">🔑 تغيير كلمة المرور</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">كلمة المرور الحالية *</label>
+                                    <input type="password" id="currentPassword" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">كلمة المرور الجديدة *</label>
+                                    <input type="password" id="newPassword" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">تأكيد كلمة المرور الجديدة *</label>
+                                    <input type="password" id="confirmPassword" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none" required>
+                                </div>
+                                <p class="text-xs text-gray-600 bg-amber-50 p-3 rounded-lg">⚠️ تأكد من أن كلمة المرور الجديدة قوية وتحتوي على أحرف كبيرة وصغيرة وأرقام</p>
+                                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-medium transition-colors">
+                                    ✅ تحديث كلمة المرور
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Restaurant Basic Info -->
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">🏪 معلومات المطعم</h2>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="restNameAr" placeholder="اسم المطعم بالعربي *" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <input type="text" id="restNameEn" placeholder="Restaurant Name (English)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <input type="text" id="restCurrency" placeholder="العملة (مثال: ج.م)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                            <input type="text" id="restWhatsapp" placeholder="رقم الواتساب (201234567890)" class="px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media Links -->
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">📱 وسائل التواصل الاجتماعي</h2>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="primaryColor" class="block text-sm font-medium text-gray-700 mb-1">🎨 اللون الأساسي</label>
+                                <input type="color" id="primaryColor" name="primary_color" class="w-full h-12 p-1 border-gray-300 rounded-lg cursor-pointer">
+                            </div>
+                            <div>
+                                <label for="currency" class="block text-sm font-medium text-gray-700 mb-1">💵 العملة</label>
+                                <input type="text" id="currency" name="currency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 sm:text-sm" placeholder="e.g., ج.م, ريال"> 
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">🖼️ بانر الإعلانات (حد أقصى 3 صور)</h3>
+                            <div class="p-4 border rounded-lg bg-gray-50 space-y-4">
+                                <div id="adBannersPreviewContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 min-h-[100px]">
+                                    <!-- Image previews will be injected here -->
+                                </div>
+                                <div>
+                                    <label for="adBannerFiles" class="block text-sm font-medium text-gray-700 mb-1">رفع صور جديدة</label>
+                                    <input type="file" id="adBannerFiles" accept="image/*" multiple onchange="handleBannerImageUpload(this.files)" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"/>
+                                    <p class="text-xs text-gray-500 mt-1">يمكنك تحديد أكثر من صورة في المرة الواحدة.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800">📱 روابط الإعلانات من وسائل التواصل الاجتماعي</h3>
+                            <div class="p-4 border rounded-lg bg-gray-50 space-y-4">
+                                <div>
+                                    <label for="socialAdImage" class="block text-sm font-medium text-gray-700 mb-1">📸 رابط إعلان صورة (إنستجرام/فيسبوك/غيرها)</label>
+                                    <input type="url" id="socialAdImage" placeholder="https://instagram.com/p/..." class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm"/>
+                                    <p class="text-xs text-gray-500 mt-1">سيتم عرض هذه الصورة في البانر إذا تم إدخال الرابط</p>
+                                </div>
+                                <div>
+                                    <label for="socialAdVideo" class="block text-sm font-medium text-gray-700 mb-1">🎥 رابط إعلان فيديو (تيك توك/انستجرام/يوتيوب/غيرها)</label>
+                                    <input type="url" id="socialAdVideo" placeholder="https://tiktok.com/@..." class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm"/>
+                                    <p class="text-xs text-gray-500 mt-1">سيتم عرض هذا الفيديو في البانر إذا تم إدخال الرابط</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">📘 فيسبوك</label>
+                            <input type="text" id="restFacebook" placeholder="https://facebook.com/yourpage" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">📸 إنستجرام</label>
+                            <input type="text" id="restInstagram" placeholder="https://instagram.com/yourpage" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">🎵 تيك توك</label>
+                            <input type="text" id="restTiktok" placeholder="https://tiktok.com/@yourpage" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Identity & Theme -->
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">🎨 الهوية البصرية والمظهر</h2>
+                    <div class="space-y-6">
+                        <!-- Logo Section -->
+                        <div class="border-b pb-6">
+                            <h3 class="text-lg font-semibold mb-4">🖼️ الشعار (اللوجو)</h3>
+                            <div class="space-y-4">
+                                <!-- File Upload -->
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">رفع الصورة</label>
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="flex-1 px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
+                                        <button onclick="uploadLogo()" id="uploadLogoBtn" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 font-medium text-sm transition-colors whitespace-nowrap">
+                                            📤 رفع
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">💡 صيغ: PNG, JPG, SVG, WebP</p>
+                                </div>
+
+                                <!-- Preview -->
+                                <div class="flex justify-center">
+                                    <div id="logoPreview" class="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300">
+                                        <span class="text-gray-400 text-3xl">📷</span>
+                                    </div>
+                                </div>
+
+                                <!-- URL Input -->
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">أو أدخل رابط مباشر</label>
+                                    <input type="text" id="restLogo" placeholder="https://example.com/logo.png" class="w-full px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Theme Section -->
+                        <div class="border-b pb-6">
+                            <h3 class="text-lg font-semibold mb-4">🎯 ألوان الموضوع</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Primary Color -->
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">اللون الأساسي</label>
+                                    <div class="flex gap-3 items-center">
+                                        <input type="color" id="restPrimaryColor" class="w-16 h-12 border rounded-lg cursor-pointer">
+                                        <input type="text" id="restPrimaryColorHex" placeholder="#D97706" class="flex-1 px-4 py-2 border rounded-lg focus:border-amber-500 focus:outline-none text-sm font-mono">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">يتم استخدام هذا اللون في الزر الرئيسي والعناوين والتفاصيل المهمة</p>
+                                </div>
+
+                                <!-- Preview Box -->
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">معاينة</label>
+                                    <div id="colorPreview" class="h-12 rounded-lg border-2 border-gray-300 flex items-center justify-center text-white font-bold">
+                                        معاينة اللون
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Theme Presets -->
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">🎭 نماذج الألوان الجاهزة</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                <button onclick="applyColorTheme('#D97706')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #D97706; color: white;" title="البرتقالي (الافتراضي)">
+                                    <span class="text-sm font-medium">🍊 برتقالي</span>
+                                </button>
+                                <button onclick="applyColorTheme('#EF4444')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #EF4444; color: white;" title="أحمر">
+                                    <span class="text-sm font-medium">❤️ أحمر</span>
+                                </button>
+                                <button onclick="applyColorTheme('#8B5CF6')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #8B5CF6; color: white;" title="بنفسجي">
+                                    <span class="text-sm font-medium">💜 بنفسجي</span>
+                                </button>
+                                <button onclick="applyColorTheme('#06B6D4')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #06B6D4; color: white;" title="سماوي">
+                                    <span class="text-sm font-medium">🔵 سماوي</span>
+                                </button>
+                                <button onclick="applyColorTheme('#10B981')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #10B981; color: white;" title="أخضر">
+                                    <span class="text-sm font-medium">💚 أخضر</span>
+                                </button>
+                                <button onclick="applyColorTheme('#F59E0B')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #F59E0B; color: white;" title="ذهبي">
+                                    <span class="text-sm font-medium">⭐ ذهبي</span>
+                                </button>
+                                <button onclick="applyColorTheme('#EC4899')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #EC4899; color: white;" title="وردي">
+                                    <span class="text-sm font-medium">🌸 وردي</span>
+                                </button>
+                                <button onclick="applyColorTheme('#6366F1')" class="p-3 rounded-lg border-2 hover:border-gray-400 transition-all" style="background-color: #6366F1; color: white;" title="نيلي">
+                                    <span class="text-sm font-medium">💎 نيلي</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6 flex gap-3">
+                    <button onclick="saveSettings()" class="bg-amber-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 font-semibold flex items-center gap-2 transition-colors">
+                        💾 حفظ جميع الإعدادات
+                    </button>
+                    <button onclick="resetSettings()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-semibold transition-colors">
+                        🔄 إعادة تعيين
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="reviewsTab" class="hidden space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-4 md:p-6">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        ⭐ تقييمات العملاء
+                        <span class="text-sm font-normal text-gray-600">(<span id="reviewsCount">0</span> تقييم)</span>
+                    </h2>
+
+                    <!-- Filter Buttons -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button onclick="filterReviews('all')" id="filterAllBtn" class="px-4 py-2 rounded-lg bg-amber-100 text-amber-700 font-semibold border border-amber-300 ring-2 ring-amber-500 ring-offset-2">📊 الكل</button>
+                        <button onclick="filterReviews('pending')" id="filterPendingBtn" class="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-700 font-semibold border border-yellow-300">⏳ قيد المراجعة</button>
+                        <button onclick="filterReviews('approved')" id="filterApprovedBtn" class="px-4 py-2 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-300">✅ موافق عليه</button>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div id="reviewsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Review cards will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Basic utility functions
+        function showTab(tab) {
+            ['categories', 'products', 'settings', 'reviews'].forEach(t => {
+                const tabEl = document.getElementById(`${t}Tab`);
+                if (tabEl) tabEl.classList.add('hidden');
+                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    btn.classList.remove('border-b-2', 'border-amber-600', 'text-amber-600');
+                    btn.classList.add('text-gray-600');
+                }
+            });
+            
+            const tabEl = document.getElementById(`${tab}Tab`);
+            if (tabEl) tabEl.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-b-2', 'border-amber-600', 'text-amber-600');
+                activeBtn.classList.remove('text-gray-600');
+            }
+        }
+    </script>
+
+    <script>
+        // Basic utility functions
+        function showTab(tab) {
+            ['categories', 'products', 'settings', 'reviews'].forEach(t => {
+                const tabEl = document.getElementById(`${t}Tab`);
+                if (tabEl) tabEl.classList.add('hidden');
+                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    btn.classList.remove('border-b-2', 'border-amber-600', 'text-amber-600');
+                    btn.classList.add('text-gray-600');
+                }
+            });
+            
+            const tabEl = document.getElementById(`${tab}Tab`);
+            if (tabEl) tabEl.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-b-2', 'border-amber-600', 'text-amber-600');
+                activeBtn.classList.remove('text-gray-600');
+            }
+        }
+    </script>
+
+    <!-- Load configuration and database modules -->
+    <script src="performance-optimizations.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="config.js"></script>
+    <script src="database.js"></script>
+    <script src="admin-script.js"></script>
+
+    <!-- Account Security Functions -->
+    <script>
+        // تحميل البريد الإلكتروني الحالي عند فتح الصفحة
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCurrentUserData();
+            
+            // إضافة event listener لزر تسجيل الخروج
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('هل تريد تسجيل الخروج؟')) {
+                        localStorage.removeItem('userId');
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('restaurantId');
+                        localStorage.removeItem('isLoggedIn');
+                        localStorage.removeItem('userFullName');
+                        window.location.href = 'admin.html';
+                    }
+                });
+            }
+        });
+
+        // تحميل بيانات المستخدم الحالي من Supabase
+        async function loadCurrentUserData() {
+            const userId = localStorage.getItem('userId');
+            const restaurantId = localStorage.getItem('restaurantId');
+            
+            if (!userId || !restaurantId) {
+                console.error('بيانات المستخدم غير موجودة');
+                return;
+            }
+
+            try {
+                const user = await fetchAPI(`users?id=eq.${userId}&restaurant_id=eq.${restaurantId}`);
+                if (user && user.length > 0) {
+                    document.getElementById('currentEmail').value = user[0].email || '';
+                    localStorage.setItem('userEmail', user[0].email);
+                    localStorage.setItem('userFullName', user[0].full_name || '');
+                }
+            } catch(e) {
+                console.error('خطأ في تحميل بيانات المستخدم:', e);
+            }
+        }
+
+        // تحديث البريد الإلكتروني
+        async function updateEmail() {
+            const newEmail = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('emailConfirmPassword').value.trim();
+            const userId = localStorage.getItem('userId');
+            const restaurantId = localStorage.getItem('restaurantId');
+
+            // التحقق من الحقول
+            if (!newEmail) {
+                alert('⚠️ الرجاء إدخال البريد الإلكتروني الجديد');
+                return;
+            }
+            if (!password) {
+                alert('⚠️ الرجاء إدخال كلمة المرور لتأكيد التغيير');
+                return;
+            }
+            if (!isValidEmail(newEmail)) {
+                alert('⚠️ البريد الإلكتروني غير صحيح');
+                return;
+            }
+            if (!userId || !restaurantId) {
+                alert('❌ لم يتم العثور على بيانات المستخدم');
+                return;
+            }
+
+            try {
+                // الحصول على بيانات المستخدم الحالية
+                const users = await fetchAPI(`users?id=eq.${userId}&restaurant_id=eq.${restaurantId}`);
+                if (!users || users.length === 0) {
+                    alert('❌ لم يتم العثور على المستخدم');
+                    return;
+                }
+
+                const currentUser = users[0];
+
+                // التحقق من كلمة المرور
+                const passwordMatch = await verifyPassword(password, currentUser.password_hash);
+                if (!passwordMatch) {
+                    alert('❌ كلمة المرور غير صحيحة');
+                    return;
+                }
+
+                // التحقق من أن البريد الجديد لم يكن موجود من قبل (فقط للمستخدمين الآخرين)
+                const existingEmail = await fetchAPI(`users?email=eq.${newEmail}&restaurant_id=eq.${restaurantId}`);
+                if (existingEmail && existingEmail.length > 0 && existingEmail[0].id !== userId) {
+                    alert('❌ هذا البريد الإلكتروني مستخدم بالفعل');
+                    return;
+                }
+
+                // تحديث البريد الإلكتروني في Supabase
+                const updateResult = await fetchAPI(`users?id=eq.${userId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        email: newEmail,
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (updateResult) {
+                    // تحديث localStorage
+                    localStorage.setItem('userEmail', newEmail);
+
+                    // تنظيف الحقول
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('emailConfirmPassword').value = '';
+                    document.getElementById('currentEmail').value = newEmail;
+
+                    alert('✅ تم تحديث البريد الإلكتروني بنجاح');
+                } else {
+                    alert('❌ فشل تحديث البريد الإلكتروني');
+                }
+            } catch(e) {
+                console.error('خطأ:', e);
+                alert('❌ حدث خطأ في تحديث البريد الإلكتروني');
+            }
+        }
+
+        // تحديث كلمة المرور
+        async function updatePassword() {
+            const currentPassword = document.getElementById('currentPassword').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+            const userId = localStorage.getItem('userId');
+            const restaurantId = localStorage.getItem('restaurantId');
+
+            // التحقق من الحقول
+            if (!currentPassword) {
+                alert('⚠️ الرجاء إدخال كلمة المرور الحالية');
+                return;
+            }
+            if (!newPassword) {
+                alert('⚠️ الرجاء إدخال كلمة المرور الجديدة');
+                return;
+            }
+            if (!confirmPassword) {
+                alert('⚠️ الرجاء تأكيد كلمة المرور الجديدة');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                alert('⚠️ كلمات المرور الجديدة غير متطابقة');
+                return;
+            }
+            if (newPassword.length < 8) {
+                alert('⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل');
+                return;
+            }
+            if (newPassword === currentPassword) {
+                alert('⚠️ كلمة المرور الجديدة يجب أن تكون مختلفة عن الحالية');
+                return;
+            }
+            if (!userId || !restaurantId) {
+                alert('❌ لم يتم العثور على بيانات المستخدم');
+                return;
+            }
+
+            try {
+                // الحصول على بيانات المستخدم الحالية
+                const users = await fetchAPI(`users?id=eq.${userId}&restaurant_id=eq.${restaurantId}`);
+                if (!users || users.length === 0) {
+                    alert('❌ لم يتم العثور على المستخدم');
+                    return;
+                }
+
+                const currentUser = users[0];
+
+                // التحقق من كلمة المرور الحالية
+                const passwordMatch = await verifyPassword(currentPassword, currentUser.password_hash);
+                if (!passwordMatch) {
+                    alert('❌ كلمة المرور الحالية غير صحيحة');
+                    return;
+                }
+
+                // تجزئة كلمة المرور الجديدة
+                const newPasswordHash = await hashPassword(newPassword);
+
+                // تحديث كلمة المرور في Supabase
+                const updateResult = await fetchAPI(`users?id=eq.${userId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        password_hash: newPasswordHash,
+                        updated_at: new Date().toISOString()
+                    })
+                });
+
+                if (updateResult) {
+                    // تنظيف الحقول
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+
+                    alert('✅ تم تحديث كلمة المرور بنجاح. سيتم تسجيل خروجك الآن.');
+                    // تسجيل الخروج بعد التحديث
+                    setTimeout(() => {
+                        localStorage.removeItem('userId');
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('restaurantId');
+                        localStorage.removeItem('isLoggedIn');
+                        localStorage.removeItem('userFullName');
+                        window.location.href = 'admin.html';
+                    }, 1000);
+                } else {
+                    alert('❌ فشل تحديث كلمة المرور');
+                }
+            } catch(e) {
+                console.error('خطأ:', e);
+                alert('❌ حدث خطأ في تحديث كلمة المرور');
+            }
+        }
+
+        // دالة التحقق من صحة البريد الإلكتروني
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // دالة تجزئة كلمة المرور (استخدام SHA-256)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // دالة التحقق من كلمة المرور - تدعم طرق تجزئة متعددة
+        async function verifyPassword(password, hash) {
+            // Method 1: SHA-256 (new method)
+            const sha256Hash = await hashPassword(password);
+            if (sha256Hash === hash) {
+                return true;
+            }
+
+            // Method 2: Base64 (legacy method)
+            const base64Hash = btoa(password);
+            if (base64Hash === hash) {
+                return true;
+            }
+
+            // Method 3: Plain text (for testing only)
+            if (password === hash) {
+                return true;
+            }
+
+            return false;
+        }
+
+        // نسخ البريد الإلكتروني الحالي
+        function copyEmail() {
+            const emailInput = document.getElementById('currentEmail');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                alert('❌ لا يوجد بريد إلكتروني لنسخه');
+                return;
+            }
+
+            // نسخ البريد إلى الحافظة
+            navigator.clipboard.writeText(email).then(() => {
+                alert('✅ تم نسخ البريد الإلكتروني بنجاح');
+            }).catch(() => {
+                // طريقة بديلة إذا لم تنجح الطريقة الأولى
+                const textarea = document.createElement('textarea');
+                textarea.value = email;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ تم نسخ البريد الإلكتروني بنجاح');
+            });
+        }
+
+        // فتح البريد الإلكتروني في تطبيق البريد الافتراضي
+        function openEmail() {
+            const email = document.getElementById('currentEmail').value.trim();
+            
+            if (!email) {
+                alert('❌ لا يوجد بريد إلكتروني لفتحه');
+                return;
+            }
+
+            // فتح تطبيق البريد الافتراضي
+            window.location.href = `mailto:${email}`;
+        }
+
+        // فتح رابط القائمة
+        function openMenuLink() {
+            const restaurantId = localStorage.getItem('restaurantId');
+            if (!restaurantId) {
+                alert('❌ لم يتم تحديد المطعم');
+                return;
+            }
+            const menuUrl = `${window.location.origin}/menu.html?restaurant_id=${restaurantId}`;
+            window.open(menuUrl, '_blank');
+        }
+
+        // نسخ رابط القائمة
+        function copyMenuLink() {
+            const restaurantId = localStorage.getItem('restaurantId');
+            if (!restaurantId) {
+                alert('❌ لم يتم تحديد المطعم');
+                return;
+            }
+            const menuUrl = `${window.location.origin}/menu.html?restaurant_id=${restaurantId}`;
+            
+            // نسخ الرابط إلى الحافظة
+            navigator.clipboard.writeText(menuUrl).then(() => {
+                alert('✅ تم نسخ رابط القائمة بنجاح!\n\n' + menuUrl);
+            }).catch(() => {
+                // طريقة بديلة إذا لم تنجح الطريقة الأولى
+                const textarea = document.createElement('textarea');
+                textarea.value = menuUrl;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ تم نسخ رابط القائمة بنجاح!\n\n' + menuUrl);
+            });
+        }
+
+        // دالة fetchAPI للتعامل مع Supabase (مع تحسّن الأداء: timeout, cache, default selects)
+        const _requestCache = new Map();
+        const _CACHE_TTL = 3 * 60 * 1000; // 3 minutes cache for GET requests
+
+        async function fetchAPI(endpoint, options = {}) {
+            const SUPABASE_URL = localStorage.getItem('supabaseUrl') || 'https://putgtsdgeyqyptamwpnx.supabase.co';
+            const SUPABASE_KEY = localStorage.getItem('supabaseKey') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGd0c2RnZXlxeXB0YW13cG54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODMxMzAsImV4cCI6MjA4Mjk1OTEzMH0.bo30DP6UxtpHSvKTCwtaUmkJR8aT-BNEhyrW35IKsVE';
+            const method = (options.method || 'GET').toUpperCase();
+
+            // Simple request cache for GET to avoid repeated heavy calls
+            const cacheKey = `${endpoint}|${JSON.stringify(options)}`;
+            if (method === 'GET') {
+                const cached = _requestCache.get(cacheKey);
+                if (cached && (Date.now() - cached.ts) < _CACHE_TTL) {
+                    return cached.data;
+                }
+            }
+
+            // Default column selections to reduce payload for heavy resources
+            let resourcePath = endpoint;
+            if (method === 'GET' && !/select=/i.test(endpoint)) {
+                const resource = endpoint.split('?')[0].split('/')[0];
+                const defaultSelects = {
+                    products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order',
+                    categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
+                    users: 'id,email,full_name,role',
+                    restaurant_settings: 'id,primary_color,logo_url,restaurant_id',
+                    reviews: 'id,restaurant_id,customer_name,customer_phone,customer_governorate,customer_city,place_rating,products_rating,service_rating,comment,is_approved,created_at,updated_at'
+                };
+                const select = defaultSelects[resource] || '*';
+                const separator = endpoint.includes('?') ? '&' : '?';
+                resourcePath = `${endpoint}${separator}select=${select}`;
+            }
+
+            const url = `${SUPABASE_URL}/rest/v1/${resourcePath}`;
+
+            // Timeout via AbortController
+            const controller = new AbortController();
+            const timeoutMs = options.timeout || 12000; // 12s default timeout
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    signal: controller.signal,
+                    ...options,
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation',
+                        ...options.headers
+                    }
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    // return raw text for non-json (e.g., images or other endpoints)
+                    const text = await response.text();
+                    return text;
+                }
+
+                const data = await response.json();
+                const normalized = Array.isArray(data) ? data : [data];
+
+                // Cache GET responses
+                if (method === 'GET') {
+                    _requestCache.set(cacheKey, { ts: Date.now(), data: normalized });
+                }
+
+                return normalized;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('Fetch API Error:', error);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - VORO-QR </title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Performance Optimization -->
+    <script src="performance-cache.js"></script>
+    <script src="config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            direction: rtl;
+            text-align: right;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #ea580c 0%, #d97706 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+
+        .login-body {
+            padding: 2.5rem 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #9ca3af;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .toggle-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 1.2rem;
+        }
+
+        .password-toggle input {
+            padding-left: 3.5rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            position: relative;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .toggle-form {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .toggle-form a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            border-left: 4px solid #dc2626;
+            font-size: 0.9rem;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            border-left: 4px solid #16a34a;
+            font-size: 0.9rem;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .demo-credentials {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #78350f;
+        }
+
+        .demo-credentials p {
+            margin: 0.25rem 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 1rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .register-link a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <div class="logo">🍽️</div>
+                <h1>VORO-QR</h1>
+                <p>smart-menu</p>
+            </div>
+
+            <!-- Body -->
+            <div class="login-body">
+                <!-- Messages -->
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">البريد الإلكتروني</label>
+                        <input 
+                            type="email" 
+                            id="loginEmail" 
+                            placeholder="أدخل بريدك الإلكتروني"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">كلمة المرور</label>
+                        <div class="password-toggle">
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                placeholder="أدخل كلمة المرور"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <span class="toggle-icon" onclick="togglePassword('loginPassword')">👁️</span>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe">تذكرني</label>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="loginBtn">
+                        تسجيل الدخول
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize config and database -->
+    <script src="database.js"></script>
+
+<script>
+    // Initialize Supabase config inputs - مع التحقق من وجود العناصر
+    document.addEventListener('DOMContentLoaded', () => {
+        const supabaseUrlEl = document.getElementById('supabaseUrl');
+        const supabaseKeyEl = document.getElementById('supabaseKey');
+        
+        if (supabaseUrlEl) {
+            supabaseUrlEl.value = localStorage.getItem('supabaseUrl') || window.SUPABASE_CONFIG.URL;
+        }
+        if (supabaseKeyEl) {
+            supabaseKeyEl.value = localStorage.getItem('supabaseKey') || '';
+        }
+    });
+
+    // Toggle password visibility
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = event.target;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            icon.textContent = '👁️';
+        }
+    }
+
+    // Show error message
+    function showError(message) {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = message;
+        errorDiv.classList.add('show');
+        setTimeout(() => errorDiv.classList.remove('show'), 5000);
+    }
+
+    // Show success message
+    function showSuccess(message) {
+        const successDiv = document.getElementById('successMessage');
+        successDiv.textContent = message;
+        successDiv.classList.add('show');
+        setTimeout(() => successDiv.classList.remove('show'), 5000);
+    }
+
+    // Clear messages
+    function clearMessages() {
+        document.getElementById('errorMessage').classList.remove('show');
+        document.getElementById('successMessage').classList.remove('show');
+    }
+
+    // Save Supabase config
+    function saveSupabaseConfig() {
+        const url = document.getElementById('supabaseUrl')?.value.trim();
+        const key = document.getElementById('supabaseKey')?.value.trim();
+
+        if (!url || !key) {
+            showError('❌ الرجاء إدخال URL و API Key');
+            return;
+        }
+
+        localStorage.setItem('supabaseUrl', url);
+        localStorage.setItem('supabaseKey', key);
+        location.reload();
+    }
+
+    // Handle login
+    async function handleLogin(event) {
+        event.preventDefault();
+        clearMessages();
+
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        const btn = document.getElementById('loginBtn');
+
+        if (!email || !password) {
+            showError('❌ الرجاء إدخال البريد وكلمة المرور');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>جاري...';
+
+        try {
+            const users = await api.get('users', `email=eq.${encodeURIComponent(email)}`);
+            
+            if (!users || (Array.isArray(users) && users.length === 0)) {
+                throw new Error('بيانات دخول غير صحيحة');
+            }
+
+            const user = Array.isArray(users) ? users[0] : users;
+            session.setSession(user.id, user.restaurant_id, user.role, user.full_name);
+
+            if (rememberMe) {
+                localStorage.setItem('savedEmail', email);
+            }
+
+            showSuccess('✅ تم تسجيل الدخول بنجاح!');
+            
+            setTimeout(() => {
+                window.location.href = user.role === 'admin' ? 'admin.html' : 'menu.html';
+            }, 1000);
+        } catch (error) {
+            showError('❌ ' + (error.message || 'فشل تسجيل الدخول'));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'تسجيل الدخول';
+        }
+    }
+
+    // Restore saved email
+    window.addEventListener('load', () => {
+        const savedEmail = localStorage.getItem('savedEmail');
+        if (savedEmail) {
+            const emailInput = document.getElementById('loginEmail');
+            if (emailInput) {
+                emailInput.value = savedEmail;
+            }
+        }
+    });
+</script></body>
+</html>

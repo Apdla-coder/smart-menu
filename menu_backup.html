@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<base href="/voro-qr/">
+<title>قائمة الطعام</title>
+<script>
+// Tailwind CSS removed from production - using CSS utilities instead
+</script>
+<style id="mainStyle">
+/* إضافة خط Tajawal للعربية */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+:root {
+  --primary-color: #5bbfc6;
+  --primary-color-rgb: 91, 191, 198;
+  --secondary-color: #aee9f2;
+  --accent-color: #eafafd;
+  --card-background: #ffffff;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-hover: rgba(0, 0, 0, 0.15);
+  --rating-active: #5bbfc6;
+  --rating-inactive: #d1d5db;
+}
+/* ==================== PRODUCT CARDS ==================== */
+.product-card {
+  background: var(--card-background);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px var(--shadow-color);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  border: 1px solid var(--border-color);
+  position: relative;
+  animation: fadeInUp 0.6s ease-out both;
+}
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px var(--shadow-hover);
+  border-color: var(--primary-color);
+}
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 640px) {
+.product-card {
+  flex-direction: column;
+}
+.product-image {
+  width: 100% !important;
+  height: 200px !important;
+}
+}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- Loading Screen -->
+<div id="loadingScreen" class="loading-screen">
+<div class="text-center text-white">
+<div class="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mx-auto mb-4"></div>
+<p class="text-xl font-semibold">جاري تحميل القائمة...</p>
+</div>
+</div>
+
+<!-- Header -->
+<header id="menuHeader" class="sticky top-0 z-40 shadow-md">
+<div id="headerAccent"></div>
+<div class="container mx-auto px-4 py-3">
+<div class="flex flex-col items-center text-center gap-2 mb-3">
+<!-- Logo -->
+<div id="logoWrapper" class="flex-shrink-0">
+<img id="restaurantLogo" src="" alt="شعار المطعم" class="w-full h-full object-cover">
+</div>
+<!-- Restaurant Name -->
+<div class="text-center">
+<h1 id="restaurantName" class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black" style="color: var(--primary-color);">قائمة الطعام</h1>
+<p id="restaurantTagline" class="text-xs sm:text-sm text-gray-500 mt-1 font-medium"></p>
+</div>
+</div>
+</div>
+<!-- Categories Grid -->
+<div class="mt-2 md:mt-4 pb-6">
+<div id="categoriesContainer" class="category-grid"></div>
+</div>
+</header>
+
+<!-- Products View - Hidden by default -->
+<main id="productsView" class="hidden">
+<!-- Back Button and Category Title -->
+<div class="sticky top-0 z-30 bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-3 md:px-6 py-3 flex items-center justify-between">
+<button onclick="backToCategories()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors font-medium text-gray-700 text-sm">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+</svg>
+رجوع
+</button>
+<h2 id="selectedCategoryTitle" class="text-xl md:text-2xl font-bold" style="color: var(--primary-color);"></h2>
+<div style="width: 100px;"></div>
+</div>
+</div>
+<!-- Products Grid -->
+<div class="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">
+<div id="productsContainer" class="space-y-4 md:space-y-6"></div>
+<!-- Empty State -->
+<div id="emptyState" class="hidden text-center py-8 md:py-12 space-y-2">
+<svg class="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+</svg>
+<p id="emptyStateMessage" class="text-gray-500 text-sm md:text-base font-medium">
+لا توجد منتجات متاحة
+</p>
+<p class="text-xs md:text-sm text-gray-400">
+جرّب تعديل الفئة أو البحث عن كلمة مختلفة.
+</p>
+</div>
+</div>
+</main>
+
+<script>
+let SUPABASE_URL = localStorage.getItem('supabaseUrl') || 'https://putgtsdgeyqyptamwpnx.supabase.co';
+let SUPABASE_KEY = localStorage.getItem('supabaseKey') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGd0c2RnZXlxeXB0YW13cG54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODMxMzAsImV4cCI6MjA4Mjk1OTEzMH0.bo30DP6UxtpHSvKTCwtaUmkJR8aT-BNEhyrW35IKsVE';
+let PROJECT_REF = localStorage.getItem('projectRef') || 'putgtsdgeyqyptamwpnx';
+let restaurantId = localStorage.getItem('restaurantId') || null;
+
+if (PROJECT_REF) {
+SUPABASE_URL = `https://${PROJECT_REF}.supabase.co`;
+}
+
+let allProducts = [];
+let allCategories = [];
+let settings = null;
+let selectedCategoryId = 'all';
+
+const categoryIcons = {
+'مشروبات': '🥤',
+'أطعمة': '🍽️',
+'حلويات': '🍰',
+'مقبلات': '🥗',
+'ساندوتشات': '🥪',
+'بيتزا': '🍕',
+'برجر': '🍔',
+'دجاج': '🍗',
+'لحوم': '🥩',
+'أسماك': '🐟',
+'معكرونة': '🍝',
+'سلطات': '🥗',
+'شوربات': '🍲',
+'عصائر': '🧃',
+'قهوة': '☕',
+'شاي': '🍵',
+'حلويات شرقية': '🧁',
+'مخبوزات': '🍞',
+'وجبات سريعة': '🍟',
+'default': '🍽️'
+};
+
+function getCategoryIcon(categoryName) {
+const name = categoryName?.toLowerCase() || '';
+for (const [key, icon] of Object.entries(categoryIcons)) {
+if (name.includes(key.toLowerCase())) {
+return icon;
+}
+}
+return categoryIcons.default;
+}
+
+const getEl = (id) => document.getElementById(id);
+const setText = (id, value) => {
+const el = getEl(id);
+if (el) {
+el.textContent = value;
+}
+};
+
+function selectCategory(categoryId) {
+selectedCategoryId = categoryId;
+const category = categoryId === 'all'
+? { name_ar: 'جميع المنتجات' }
+: allCategories.find(cat => cat.id === categoryId);
+document.getElementById('selectedCategoryTitle').textContent = category?.name_ar || 'جميع المنتجات';
+document.getElementById('menuHeader').style.display = 'none';
+document.getElementById('productsView').classList.remove('hidden');
+renderProducts();
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToCategories() {
+selectedCategoryId = 'all';
+document.getElementById('menuHeader').style.display = 'block';
+document.getElementById('productsView').classList.add('hidden');
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function fetchAPI(endpoint, options = {}) {
+const method = (options.method || 'GET').toUpperCase();
+let resourcePath = endpoint;
+if (method === 'GET' && !/select=/i.test(endpoint)) {
+const separator = endpoint.includes('?') ? '&' : '?';
+resourcePath = `${endpoint}${separator}select=*`;
+}
+const url = `${SUPABASE_URL}/rest/v1/${resourcePath}`;
+try {
+const response = await fetch(url, {
+method: 'GET',
+...options,
+headers: {
+'apikey': SUPABASE_KEY,
+'Authorization': `Bearer ${SUPABASE_KEY}`,
+'Content-Type': 'application/json',
+'Prefer': 'return=representation',
+...options.headers
+}
+});
+if (!response.ok) {
+console.error(`API Error ${response.status}:`, response.statusText);
+throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+const data = await response.json();
+return Array.isArray(data) ? data : [data];
+} catch (error) {
+console.error('Fetch API Error:', error);
+return [];
+}
+}
+
+function renderCategories() {
+const container = getEl('categoriesContainer');
+let html = '';
+allCategories.forEach((cat, index) => {
+const categoryProducts = allProducts.filter(p => p.category_id === cat.id);
+const productCount = categoryProducts.length;
+const icon = getCategoryIcon(cat.name_ar);
+const animationDelay = index * 80;
+html += `
+<div class="category-card" onclick="selectCategory('${cat.id}')" style="animation-delay: ${animationDelay}ms;">
+<div class="category-image-wrapper">
+${cat.image_url ?
+`<img src="${cat.image_url}" alt="${cat.name_ar}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+<div class="category-icon" style="display: none;">${icon}</div>` :
+`<div class="category-icon">${icon}</div>`
+}
+${productCount > 0 ? `<span class="category-badge">${productCount}</span>` : ''}
+</div>
+<div class="category-info">
+<h3 class="category-name">${cat.name_ar}</h3>
+</div>
+</div>
+`;
+});
+container.innerHTML = html;
+}
+
+function renderProducts() {
+const container = document.getElementById('productsContainer');
+const emptyState = document.getElementById('emptyState');
+const filtered = allProducts.filter(product => {
+if (selectedCategoryId === 'all') return true;
+return product.category_id === selectedCategoryId;
+});
+if (filtered.length === 0) {
+container.innerHTML = '';
+emptyState.classList.remove('hidden');
+return;
+}
+emptyState.classList.add('hidden');
+const html = filtered.map((product, index) => renderProductCard(product, index)).join('');
+container.innerHTML = html;
+}
+
+function renderProductCard(product, index) {
+const animationDelay = index * 60;
+const imageUrl = product.image_url || '';
+return `
+<article class="product-card" style="animation-delay: ${animationDelay}ms;">
+<div class="product-image">
+${imageUrl ? `
+<img src="${imageUrl}" alt="${product.name_ar}" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+<div class="fallback-thumb hidden">🍽️</div>
+` : `
+<div class="fallback-thumb">🍽️</div>
+`}
+${product.is_featured ? '<span class="badge-featured">⭐ مميز</span>' : ''}
+</div>
+<div class="product-content">
+<div class="product-header">
+<h3 class="product-name">${product.name_ar}</h3>
+${product.name_en ? `<p class="product-name-en">${product.name_en}</p>` : ''}
+</div>
+${product.description_ar ? `<p class="product-description">${product.description_ar}</p>` : ''}
+<div class="product-footer">
+<span></span>
+<div class="price-chip">
+${product.price} <span style="font-size: 0.65rem; font-weight: 400;">${settings?.currency || 'ج.م'}</span>
+</div>
+</div>
+</div>
+</article>
+`;
+}
+
+async function loadData() {
+try {
+const settingsData = await fetchAPI(`restaurant_settings?restaurant_id=eq.${restaurantId}`);
+if (settingsData.length > 0) {
+settings = settingsData[0];
+const nameAr = settings.restaurant_name_ar || 'قائمة الطعام';
+const nameEn = settings.restaurant_name_en || '';
+const primaryColor = settings.primary_color || '#D97706';
+setText('restaurantName', nameAr);
+const taglineEl = getEl('restaurantTagline');
+if (taglineEl) {
+if (nameEn.trim()) {
+taglineEl.textContent = nameEn;
+taglineEl.classList.remove('hidden');
+} else {
+taglineEl.classList.add('hidden');
+}
+}
+const logoImg = getEl('restaurantLogo');
+if (logoImg && settings.logo_url) {
+logoImg.src = settings.logo_url;
+logoImg.onerror = function() {
+this.parentElement.classList.add('hidden');
+};
+}
+document.documentElement.style.setProperty('--primary-color', primaryColor);
+}
+const categoriesEndpoint = `categories?restaurant_id=eq.${restaurantId}&is_active=eq.true&order=display_order.asc`;
+allCategories = await fetchAPI(categoriesEndpoint);
+const productsEndpoint = `products?restaurant_id=eq.${restaurantId}&is_available=eq.true&order=display_order.asc`;
+allProducts = await fetchAPI(productsEndpoint);
+renderCategories();
+renderProducts();
+const loadingEl = getEl('loadingScreen');
+if (loadingEl) {
+loadingEl.style.display = 'none';
+}
+} catch (error) {
+console.error('Error loading data:', error);
+}
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+const params = new URLSearchParams(window.location.search);
+const urlRestaurantId = params.get('restaurant_id');
+if (urlRestaurantId) {
+restaurantId = urlRestaurantId;
+localStorage.setItem('restaurantId', restaurantId);
+}
+if (!restaurantId) {
+document.getElementById('loadingScreen').innerHTML = `
+<div class="text-center text-white px-4">
+<p class="text-xl font-semibold mb-2">لم يتم تحديد المطعم</p>
+<p class="text-sm opacity-90">الرجاء فتح الرابط من خلال لوحة التحكم</p>
+</div>
+`;
+return;
+}
+await loadData();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>قائمة الطعام</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='%23ffffff'/></svg>">
+<link rel="stylesheet" href="assets/css/tailwind.css">
+<!-- External libraries loaded with defer for better performance -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js" defer></script>
+<script src="config.js"></script>
+<!-- Tailwind CSS is loaded from a prebuilt file (assets/css/tailwind.css) in production build -->
+<style>
+/* 3D Background Effects */
+body {
+  background: linear-gradient(135deg, #0f2027 0%, #16222a 50%, #1b2a32 100%);
+  position: relative;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Header Styling */
+#menuHeader {
+    background: rgba(15, 32, 39, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#headerAccent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), transparent);
+}
+
+.restaurantLogo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.restaurantLogo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Restaurant Name Styling */
+#restaurantName {
+    background: linear-gradient(135deg, var(--primary-color), #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+    letter-spacing: -0.02em;
+}
+
+#restaurantTagline {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+/* Ad Banner Styling */
+#adBannerContainer {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.05);
+    margin: 1.5rem auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+}
+
+#adBannerContainer .swiper-slide img,
+#adBannerContainer .swiper-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+/* Social Media Links Styling */
+#socialLinksContainer {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#socialLinksContainer a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+#socialLinksContainer a:hover {
+    transform: translateY(-3px) scale(1.1);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+#socialLinksContainer svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Review Button in Header Styling */
+#reviewButtonHeader {
+    background: linear-gradient(135deg, var(--primary-color), #f59e0b, #ec4899);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3), 0 0 20px rgba(236, 72, 153, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+#reviewButtonHeader:hover {
+    animation: gradientShift 1s ease infinite, pulse 1.5s ease infinite;
+    box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4), 0 0 30px rgba(236, 72, 153, 0.3);
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Review FAB Styling (Floating Button - Hidden on main page) */
+#reviewFabContainer {
+    left: 16px !important;
+    top: 16px !important;
+    gap: 12px;
+    display: none; /* Hide on main page, show only in products view */
+}
+
+#reviewFab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#reviewFab:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+#reviewFab svg {
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.fab-text {
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+#reviewFabContainer:hover .fab-text {
+    transform: translateX(-4px);
+}
+
+/* Loading Screen */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0f2027 0%, #16222a 50%, #1b2a32 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    backdrop-filter: blur(10px);
+}
+
+.loading-screen.hidden {
+    display: none !important;
+}
+
+/* 3D Cards Effect */
+.menu-card, .category-card, .product-card {
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.product-card{
+    flex-direction: row-reverse;
+    height: 200px;
+}
+
+/* Category Card Improvements */
+.category-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.category-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.category-card:hover::before {
+    opacity: 0.1;
+}
+
+.menu-card:hover, .category-card:hover {
+    transform: translateY(-5px) perspective(1000px) rotateY(5deg) rotateX(3deg) translateZ(15px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* Floating elements */
+.floating {
+    animation: floating3D 6s ease-in-out infinite;
+}
+
+@keyframes floating3D {
+    0%, 100% {
+        transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotateX(5deg) rotateY(5deg);
+    }
+}
+
+/* Floating Mascot */
+.floating-mascot {
+    position: fixed;
+    left: 20px;
+    bottom: 80px;
+    width: 80px;
+    height: 80px;
+    z-index: 1000;
+    animation: floatingMascot 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.floating-mascot:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes floatingMascot {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-15px) rotate(5deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .floating-mascot {
+        width: 60px;
+        height: 60px;
+        left: 15px;
+        bottom: 60px;
+    }
+}
+
+/* Section Title Styling */
+.section-title {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border-radius: 12px;
+    border-right: 4px solid var(--primary-color);
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+/* Header Improvements */
+#menuHeader {
+    padding-bottom: 2rem;
+}
+
+/* Category Cards Grid Improvements */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+@media (min-width: 640px) {
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 2.5rem;
+    }
+}
+
+/* Category Products Group */
+.category-products-group {
+    margin-bottom: 4rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.category-products-group:last-child {
+    border-bottom: none;
+    margin-bottom: 2rem;
+}
+
+.category-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    display: block;
+    width: 100%;
+}
+
+/* Section Group */
+.section-group {
+    margin-bottom: 2.5rem;
+    clear: both;
+}
+
+.section-group:last-child {
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+    .restaurantLogo {
+        width: 80px;
+        height: 80px;
+    }
+    
+    #reviewFabContainer {
+        left: 12px !important;
+        top: 12px !important;
+    }
+    
+    #reviewFab {
+        width: 48px;
+        height: 48px;
+    }
+    
+    #reviewFab svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .fab-text {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    #socialLinksContainer {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    #socialLinksContainer a {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #socialLinksContainer svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- 3D Floating Elements -->
+<div class="fixed top-10 left-10 w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full opacity-20 floating blur-xl"></div>
+<div class="fixed top-20 right-20 w-32 h-32 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full opacity-10 floating blur-2xl" style="animation-delay: 2s;"></div>
+<div class="fixed bottom-20 left-20 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full opacity-15 floating blur-xl" style="animation-delay: 4s;"></div>
+<div class="fixed bottom-10 right-10 w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full opacity-20 floating blur-lg" style="animation-delay: 1s;"></div>
+
+<!-- Floating Mascot -->
+<img src="mascot.png" alt="Floating Mascot" class="floating-mascot" onerror="this.style.display='none';">
+<!-- Loading Screen -->
+<!-- Floating Action Button for Reviews -->
+<!-- Floating Action Button for Reviews (opens reviews list in products view) -->
+<div id="reviewFabContainer" class="fixed top-4 left-4 flex items-center gap-3 z-[9999] cursor-pointer" onclick="openReviewsDisplayModal()" style="display: none;">
+    <button id="reviewFab" class="text-white rounded-full shadow-lg flex items-center justify-center transition-all transform">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+        </svg>
+    </button>
+    <span class="fab-text bg-white text-gray-800 text-sm font-semibold px-4 py-2 rounded-full shadow-md">كيف كانت تجربتك؟</span>
+</div>
+
+<div id="loadingScreen" class="loading-screen">
+<div class="text-center text-white">
+<div class="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mx-auto mb-4"></div>
+<p class="text-xl font-semibold">جاري تحميل القائمة...</p>
+</div>
+</div>
+
+<!-- Header -->
+<header id="menuHeader" class="sticky top-0 z-40 shadow-md">
+<div id="headerAccent"></div>
+<div class="container mx-auto px-4 py-4 md:py-6" style="perspective: 1000px;">
+<!-- Logo, Name, Social, Review Section -->
+<div class="flex flex-row items-center text-center gap-5px md:gap-4 mb-4 floating">
+<!-- Logo -->
+<div id="logoWrapper" class="flex-shrink-0 menu-card">
+<img id="restaurantLogo" src="" alt="شعار المطعم" class="restaurantLogo">
+</div>
+
+<!-- Restaurant Name -->
+<div class="text-center w-full">
+<h1 id="restaurantName" class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-2" style="color: var(--primary-color);">قائمة الطعام</h1>
+<p id="restaurantTagline" class="text-sm sm:text-base text-gray-300 mt-1 font-medium"></p>
+</div>
+
+<!-- Social Media Links -->
+<div id="socialLinksContainer" class="flex justify-center gap-3 items-center">
+    <!-- Social links will be injected here by JS -->
+</div>
+
+<!-- Review Button in Header -->
+<button id="reviewButtonHeader" onclick="openReviewModal()" class="mt-4 mb-2 px-6 py-3 rounded-full bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 text-white font-bold text-sm md:text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto" style="display: flex;">
+    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+    </svg>
+    <span>اترك رأيك</span>
+</button>
+</div>
+
+<!-- Ad Banner Carousel - Separate from Logo/Social Section -->
+<div id="adBannerContainer" class="w-full max-w-5xl mx-auto mt-4 mb-4 rounded-lg overflow-hidden shadow-lg" style="display: none;">
+    <div class="swiper-container ad-swiper" style="height: 300px;">
+        <div class="swiper-wrapper" id="adBannerWrapper">
+            <!-- Slides will be injected here -->
+        </div>
+        <div class="swiper-pagination" style="bottom: 10px;"></div>
+    </div>
+</div>
+</div>
+<!-- Categories Grid -->
+<div class="mt-4 md:mt-6 pb-8" style="perspective: 1000px;">
+<div id="categoriesContainer" class="category-grid"></div>
+</div>
+
+<!-- Footer in Main Page -->
+<footer id="mainPageFooter" class="bg-gray-900 text-gray-300 py-8 mt-12 border-t border-gray-800">
+    <div class="container mx-auto px-4">
+        <div class="text-center space-y-4">
+            <div class="space-y-2">
+                <p class="text-sm md:text-base font-medium">
+                    تم التطوير بواسطة شركة العبد للبرمجيات
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Developed by Al-Abd Software Company
+                </p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-sm md:text-base">
+                    م. عبدالله هاني
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Eng. Abdullah Hani
+                </p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-sm md:text-base">
+                    ت. 01220200747
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Tel. 01220200747
+                </p>
+            </div>
+            <div class="pt-4 border-t border-gray-800">
+                <p class="text-xs md:text-sm text-gray-400">
+                    جميع الحقوق محفوظة ©
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    All Rights Reserved ©
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+</header>
+
+<!-- Products View - Hidden by default -->
+<main id="productsView" class="hidden">
+<!-- Back Button and Category Title -->
+<div class="sticky top-0 z-30 bg-white shadow-sm">
+<div class="max-w-7xl mx-auto px-3 md:px-6 py-3 flex items-center justify-between">
+<button onclick="backToCategories()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors font-medium text-gray-700 text-sm">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+</svg>
+رجوع
+</button>
+<h2 id="selectedCategoryTitle" class="text-xl md:text-2xl font-bold" style="color: var(--primary-color);"></h2>
+<div style="width: 100px;"></div>
+</div>
+<!-- Section Filters -->
+<div id="sectionFiltersContainer" class="max-w-7xl mx-auto px-3 md:px-6 pb-3 hidden">
+<div class="flex flex-wrap gap-2 items-center">
+<span class="text-sm font-medium text-gray-600">فلترة حسب القسم:</span>
+<div id="sectionFilters" class="flex flex-wrap gap-2">
+<button onclick="filterBySection('all')" class="section-filter-btn active px-3 py-1 rounded-full text-sm font-medium transition-all" data-section="all">
+الكل
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Products Grid -->
+<div class="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6">
+
+<div id="productsContainer" class="space-y-4 md:space-y-6"></div>
+<!-- Empty State -->
+<div id="emptyState" class="hidden text-center py-8 md:py-12 space-y-2">
+<svg class="w-12 h-12 md:w-16 md:h-16 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+</svg>
+<p id="emptyStateMessage" class="text-gray-500 text-sm md:text-base font-medium">
+لا توجد منتجات متاحة
+</p>
+<p class="text-xs md:text-sm text-gray-400">
+جرّب تعديل الفئة أو البحث عن كلمة مختلفة.
+</p>
+</div>
+</div>
+
+<!-- Footer in Products View -->
+<footer id="productsPageFooter" class="bg-gray-900 text-gray-300 py-8 mt-12 border-t border-gray-800">
+    <div class="container mx-auto px-4">
+        <div class="text-center space-y-4">
+            <div class="space-y-2">
+                <p class="text-sm md:text-base font-medium">
+                    تم التطوير بواسطة شركة العبد للبرمجيات
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Developed by Al-Abd Software Company
+                </p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-sm md:text-base">
+                    م. عبدالله هاني
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Eng. Abdullah Hani
+                </p>
+            </div>
+            <div class="space-y-1">
+                <p class="text-sm md:text-base">
+                    ت. 01220200747
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    Tel. 01220200747
+                </p>
+            </div>
+            <div class="pt-4 border-t border-gray-800">
+                <p class="text-xs md:text-sm text-gray-400">
+                    جميع الحقوق محفوظة ©
+                </p>
+                <p class="text-xs md:text-sm text-gray-400">
+                    All Rights Reserved ©
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+</main>
+
+<script>
+// Use config from config.js if available, otherwise fallback
+let SUPABASE_URL = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.URL) || localStorage.getItem('supabaseUrl') || 'https://putgtsdgeyqyptamwpnx.supabase.co';
+let SUPABASE_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.KEY) || localStorage.getItem('supabaseKey') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGd0c2RnZXlxeXB0YW13cG54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODMxMzAsImV4cCI6MjA4Mjk1OTEzMH0.bo30DP6UxtpHSvKTCwtaUmkJR8aT-BNEhyrW35IKsVE';
+let PROJECT_REF = localStorage.getItem('projectRef') || 'putgtsdgeyqyptamwpnx';
+let restaurantId = localStorage.getItem('restaurantId') || null;
+
+    if (PROJECT_REF && !SUPABASE_URL.includes(PROJECT_REF)) {
+SUPABASE_URL = `https://${PROJECT_REF}.supabase.co`;
+}
+
+// Create a single Supabase client instance and reuse it to avoid redeclaration
+let supabaseClient = null;
+try {
+    if (typeof window.__supabaseClient === 'undefined' && typeof supabase !== 'undefined') {
+        window.__supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+    supabaseClient = window.__supabaseClient || null;
+} catch (e) {
+    // library may not be loaded yet; initRealtimeClient will re-check
+    console.warn('Supabase lib not available yet during init:', e);
+}
+
+let allProducts = [];
+let allCategories = [];
+let settings = null;
+let selectedCategoryId = 'all';
+let selectedSection = 'all';
+let isInProductsView = false; // Track whether we are in products/sections view
+
+const categoryIcons = {
+'مشروبات': '🥤',
+'أطعمة': '🍽️',
+'حلويات': '🍰',
+'مقبلات': '🥗',
+'ساندوتشات': '🥪',
+'بيتزا': '🍕',
+'برجر': '🍔',
+'دجاج': '🍗',
+'لحوم': '🥩',
+'أسماك': '🐟',
+'معكرونة': '🍝',
+'سلطات': '🥗',
+'شوربات': '🍲',
+'عصائر': '🧃',
+'قهوة': '☕',
+'شاي': '🍵',
+'حلويات شرقية': '🧁',
+'مخبوزات': '🍞',
+'وجبات سريعة': '🍟',
+'default': '🍽️'
+};
+
+function getCategoryIcon(categoryName) {
+const name = categoryName?.toLowerCase() || '';
+for (const [key, icon] of Object.entries(categoryIcons)) {
+if (name.includes(key.toLowerCase())) {
+return icon;
+}
+}
+return categoryIcons.default;
+}
+
+function renderSocialLinks(settings) {
+    const container = getEl('socialLinksContainer');
+    if (!container || !settings) return;
+
+const socialMap = {
+  facebook_url: {
+    icon: `<svg fill="currentColor" class="w-7 h-7" viewBox="0 0 24 24">
+      <path d="M12 2.04C6.5 2.04 2 6.53 2 12.06c0 5.52 4.5 10.02 10 10.02s10-4.5 10-10.02C22 6.53 17.5 2.04 12 2.04zM16.5 12.62h-2.1v6.88h-2.8v-6.88H10v-2.5h1.6v-1.52c0-1.62 1-2.5 2.5-2.5h1.9v2.5h-1.2c-.6 0-.7.3-.7.72v1.3h2.1l-.3 2.5z"/>
+    </svg>`,
+    url: settings.facebook_url,
+    color: 'text-blue-600'
+  },
+  instagram_url: {
+    icon: `<svg fill="currentColor" class="w-7 h-7" viewBox="0 0 24 24">
+      <path d="M12 2c2.7 0 3 .01 4.1.06 1.1.05 1.8.2 2.4.4.7.3 1.2.7 1.7 1.2.5.5 1 1.1 1.2 1.7.2.6.4 1.3.4 2.4.05 1.1.06 1.4.06 4.1s-.01 3-.06 4.1c-.05 1.1-.2 1.8-.4 2.4-.3.7-.7 1.2-1.2 1.7-.5.5-1.1 1-1.7 1.2-.6.2-1.3.4-2.4.4-1.1.05-1.4.06-4.1.06s-3-.01-4.1-.06c-1.1-.05-1.8-.2-2.4-.4-.7-.3-1.2-.7-1.7-1.2-.5-.5-1-1.1-1.2-1.7-.2-.6-.4-1.3-.4-2.4-.05-1.1-.06-1.4-.06-4.1s.01-3 .06-4.1c.05-1.1.2-1.8.4-2.4.3-.7.7-1.2 1.2-1.7.5-.5 1.1-1 1.7-1.2.6-.2 1.3-.4 2.4-.4C9 2.01 9.3 2 12 2zm0 4.4c-2.4 0-4.4 2-4.4 4.4s2 4.4 4.4 4.4 4.4-2 4.4-4.4-2-4.4-4.4-4.4zm0 7.2c-1.5 0-2.8-1.3-2.8-2.8s1.3-2.8 2.8-2.8 2.8 1.3 2.8 2.8-1.3 2.8-2.8 2.8zm5.8-7.3c-.6 0-1.1.5-1.1 1.1s.5 1.1 1.1 1.1 1.1-.5 1.1-1.1-.5-1.1-1.1-1.1z"/>
+    </svg>`,
+    url: settings.instagram_url,
+    color: 'text-pink-500'
+  },
+  tiktok_url: {
+    icon: `<svg fill="currentColor" class="w-7 h-7" viewBox="0 0 24 24">
+      <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-2.43.05-4.84-.95-6.43-2.8-1.59-1.87-2.32-4.2-1.86-6.58.56-2.8 2.71-4.96 5.42-5.66 2.4-.62 4.6.32 5.97 2.25V.02z"/>
+    </svg>`,
+    url: settings.tiktok_url,
+    color: 'text-black'
+  },
+  whatsapp_number: {
+    icon: `<svg fill="currentColor" class="w-7 h-7" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+    </svg>`,
+    url: `https://wa.me/${settings.whatsapp_number}`,
+    color: 'text-green-600'
+  }
+};
+
+    let html = '';
+    for (const key in socialMap) {
+        if (settings[key]) {
+            const { icon, url, color } = socialMap[key];
+            // Special styling for WhatsApp to ensure green color
+            const whatsappStyle = key === 'whatsapp_number' ? 'style="color: #25D366 !important;"' : '';
+            html += `
+                <a href="${url}" target="_blank" rel="noopener noreferrer" class="${color} hover:opacity-75 transition-opacity" ${whatsappStyle}>
+                    ${icon}
+                </a>
+            `;
+        }
+    }
+    container.innerHTML = html;
+}
+
+const getEl = (id) => document.getElementById(id);
+const setText = (id, value) => {
+const el = getEl(id);
+if (el) {
+el.textContent = value;
+}
+};
+
+// URL validation function
+function isValidUrl(string) {
+try {
+const url = new URL(string);
+return url.protocol === 'http:' || url.protocol === 'https:';
+} catch (_) {
+return false;
+}
+}
+
+// Check if URL is from social media platform (might need special handling)
+function isSocialMediaUrl(url) {
+if (!url) return false;
+const lowerUrl = url.toLowerCase();
+return lowerUrl.includes('facebook.com') || 
+lowerUrl.includes('instagram.com') || 
+lowerUrl.includes('tiktok.com') || 
+lowerUrl.includes('youtube.com') ||
+lowerUrl.includes('twitter.com') ||
+lowerUrl.includes('x.com') ||
+lowerUrl.includes('fb.me');  // Handle Facebook short links
+}
+
+// Extract Facebook post ID for better URL handling
+function getFacebookPostUrl(url) {
+if (!url) return url;
+try {
+// Handle different Facebook URL formats
+if (url.includes('/posts/')) {
+return url; // Already a post URL
+} else if (url.includes('/permalink.php')) {
+return url; // Already a permalink
+} else if (url.match(/facebook\.com\/.*\/(\d+)/)) {
+const postId = url.match(/facebook\.com\/.*\/(\d+)/)[1];
+return `https://www.facebook.com/posts/${postId}`;
+}
+return url; // Return as-is if can't parse
+} catch (e) {
+return url;
+}
+}
+
+// Handle media loading errors
+function handleMediaError(element, type) {
+console.warn(`Failed to load ${type}:`, element.src);
+const parent = element.parentElement;
+if (parent) {
+if (type === 'video') {
+parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100">⚠️ Failed to load video</div>';
+} else if (type === 'image') {
+parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-500 bg-gray-100">⚠️ Failed to load image</div>';
+}
+}
+}
+
+function selectCategory(categoryId) {
+selectedCategoryId = categoryId;
+selectedSection = 'all'; // Reset section filter when changing category
+isInProductsView = true;
+const category = categoryId === 'all'
+? { name_ar: 'جميع المنتجات' }
+: allCategories.find(cat => cat.id === categoryId);
+document.getElementById('selectedCategoryTitle').textContent = category?.name_ar || 'جميع المنتجات';
+document.getElementById('menuHeader').style.display = 'none';
+document.getElementById('productsView').classList.remove('hidden');
+// Show floating review button in products view
+const reviewFabContainer = getEl('reviewFabContainer');
+if (reviewFabContainer) {
+    reviewFabContainer.style.display = 'flex';
+}
+// Hide header review button
+const reviewButtonHeader = getEl('reviewButtonHeader');
+if (reviewButtonHeader) {
+    reviewButtonHeader.style.display = 'none';
+}
+renderProducts();
+renderSectionFilters();
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function filterBySection(section) {
+selectedSection = section;
+renderProducts();
+updateSectionFilterUI();
+}
+
+function renderSectionFilters() {
+const container = document.getElementById('sectionFiltersContainer');
+const filtersContainer = document.getElementById('sectionFilters');
+if (!container || !filtersContainer) return;
+
+// Get sections from the selected category
+const category = allCategories.find(cat => cat.id === selectedCategoryId);
+let sections = [];
+
+if (category && category.sections && Array.isArray(category.sections)) {
+    sections = category.sections;
+}
+
+if (sections.length === 0) {
+container.classList.add('hidden');
+return;
+}
+
+container.classList.remove('hidden');
+
+let html = `
+<button onclick="filterBySection('all')" class="section-filter-btn ${selectedSection === 'all' ? 'active' : ''} px-3 py-1 rounded-full text-sm font-medium transition-all" data-section="all">
+الكل
+</button>`;
+
+sections.forEach(section => {
+const sectionName = typeof section === 'string' ? section : section.name || section;
+html += `
+<button onclick="filterBySection('${sectionName}')" class="section-filter-btn ${selectedSection === sectionName ? 'active' : ''} px-3 py-1 rounded-full text-sm font-medium transition-all" data-section="${sectionName}">
+${sectionName}
+</button>`;
+});
+
+filtersContainer.innerHTML = html;
+}
+
+function updateSectionFilterUI() {
+const buttons = document.querySelectorAll('.section-filter-btn');
+buttons.forEach(btn => {
+if (btn.dataset.section === selectedSection) {
+btn.classList.add('active');
+} else {
+btn.classList.remove('active');
+}
+});
+}
+
+function backToCategories() {
+    selectedCategoryId = 'all';
+    selectedSection = 'all';
+    isInProductsView = false;
+    // Show categories view
+    document.getElementById('menuHeader').style.display = 'block';
+    document.getElementById('productsView').classList.add('hidden');
+    // Hide floating review button, show header review button
+    const reviewFabContainer = getEl('reviewFabContainer');
+    if (reviewFabContainer) {
+        reviewFabContainer.style.display = 'none';
+    }
+    const reviewButtonHeader = getEl('reviewButtonHeader');
+    if (reviewButtonHeader) {
+        reviewButtonHeader.style.display = 'flex';
+    }
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Use global dataCache from config.js if available, otherwise create simple cache
+const requestCache = window.dataCache || new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Simple cache cleanup (only if not using global cache)
+function cleanCache() {
+    if (!window.dataCache && requestCache.size > 50) {
+        const entries = Array.from(requestCache.entries());
+        entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+        const toRemove = entries.slice(0, entries.length - 50);
+        toRemove.forEach(([key]) => requestCache.delete(key));
+    }
+}
+
+// Swiper lazy loading
+let swiperLoaded = false;
+let swiperLoading = false;
+
+async function loadSwiperIfNeeded() {
+    if (swiperLoaded) return Promise.resolve();
+    if (swiperLoading) {
+        // Wait for ongoing load
+        return new Promise(resolve => {
+            const checkInterval = setInterval(() => {
+                if (swiperLoaded) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        });
+    }
+    
+    swiperLoading = true;
+    
+    return new Promise((resolve, reject) => {
+        // Load CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/swiper/swiper-bundle.min.css';
+        document.head.appendChild(link);
+        
+        // Load JS
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/swiper/swiper-bundle.min.js';
+        script.onload = () => {
+            swiperLoaded = true;
+            swiperLoading = false;
+            resolve();
+        };
+        script.onerror = () => {
+            swiperLoading = false;
+            reject(new Error('Failed to load Swiper'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
+// Optimized API function using config.js api if available
+async function fetchAPI(endpoint, options = {}) {
+    // Use optimized api from config.js if available
+    if (window.api && window.api.get) {
+        const method = (options.method || 'GET').toUpperCase();
+        if (method === 'GET') {
+            try {
+                // Parse endpoint to table and query
+                const [table, ...queryParts] = endpoint.split('?');
+                const query = queryParts.join('?');
+                
+                // Add default selects for optimization
+                let finalQuery = query;
+                if (!/select=/i.test(query)) {
+                    const resourceMatch = table.match(/^([^?\/]+)/);
+                    const resource = resourceMatch ? resourceMatch[1] : table;
+                    const defaultSelects = {
+                        products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section',
+                        categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
+                        users: 'id,email,full_name,role',
+                        restaurant_settings: 'id,primary_color,logo_url,restaurant_id,restaurant_name_ar,restaurant_name_en,ad_banner_urls,social_ad_image,social_ad_video,facebook_url,instagram_url,tiktok_url,whatsapp_number,currency',
+                        reviews: 'id,restaurant_id,customer_name,customer_phone,customer_governorate,customer_city,place_rating,products_rating,service_rating,comment,is_approved,created_at,updated_at'
+                    };
+                    const select = defaultSelects[resource] || '*';
+                    finalQuery = query ? `${query}&select=${select}` : `select=${select}`;
+                }
+                
+                const result = await window.api.get(table, finalQuery);
+                return Array.isArray(result) ? result : [result];
+            } catch (error) {
+                console.error('API Error:', error);
+                return [];
+            }
+        }
+        // For non-GET requests, use direct fetch (api.post/patch/delete not optimized yet)
+    }
+    
+    // Fallback to original implementation (should not happen if config.js is loaded)
+    const cacheKey = `api_${endpoint}`;
+    if (window.dataCache) {
+        const cached = window.dataCache.get(cacheKey, CACHE_DURATION);
+        if (cached !== null && !endpoint.includes('reviews')) {
+            return cached;
+        }
+    } else {
+        const cached = requestCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION && !endpoint.includes('reviews')) {
+            return cached.data;
+        }
+    }
+
+    const method = (options.method || 'GET').toUpperCase();
+    let resourcePath = endpoint;
+    if (method === 'GET' && !/select=/i.test(endpoint)) {
+        const resourceMatch = endpoint.match(/^([^?\/]+)/);
+        const resource = resourceMatch ? resourceMatch[1] : endpoint.split('?')[0];
+        const defaultSelects = {
+            products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section',
+            categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
+            users: 'id,email,full_name,role',
+            restaurant_settings: 'id,primary_color,logo_url,restaurant_id,restaurant_name_ar,restaurant_name_en,ad_banner_urls,social_ad_image,social_ad_video,facebook_url,instagram_url,tiktok_url,whatsapp_number,currency',
+            reviews: 'id,restaurant_id,customer_name,customer_phone,customer_governorate,customer_city,place_rating,products_rating,service_rating,comment,is_approved,created_at,updated_at'
+        };
+        const select = defaultSelects[resource] || '*';
+        const separator = endpoint.includes('?') ? '&' : '?';
+        resourcePath = `${endpoint}${separator}select=${select}`;
+    }
+    const url = `${SUPABASE_URL}/rest/v1/${resourcePath}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced to 8 seconds
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            signal: controller.signal,
+            ...options,
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation',
+                ...options.headers
+            }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            if (response.status !== 404) {
+                console.error(`API Error ${response.status}:`, response.statusText);
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const result = Array.isArray(data) ? data : [data];
+
+        // Cache the result
+        if (window.dataCache) {
+            window.dataCache.set(cacheKey, result, CACHE_DURATION);
+        } else {
+            requestCache.set(cacheKey, {
+                data: result,
+                timestamp: Date.now()
+            });
+            cleanCache();
+        }
+
+        return result;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name !== 'AbortError') {
+            console.error('Fetch API Error:', error);
+        }
+        return [];
+    }
+}
+
+function renderCategories() {
+    const container = getEl('categoriesContainer');
+    if (!container) return;
+    
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
+    const tempDiv = document.createElement('div');
+    
+    allCategories.forEach((cat, index) => {
+        const categoryProducts = allProducts.filter(p => p.category_id === cat.id);
+        const productCount = categoryProducts.length;
+        const icon = getCategoryIcon(cat.name_ar);
+        const animationDelay = index * 80;
+        
+        tempDiv.innerHTML = `
+            <div class="category-card" onclick="selectCategory('${cat.id}')" style="animation-delay: ${animationDelay}ms;">
+                <div class="category-image-wrapper">
+                    ${cat.image_url ?
+                        `<img src="${cat.image_url}" alt="${cat.name_ar}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="category-icon" style="display: none;">${icon}</div>` :
+                        `<div class="category-icon">${icon}</div>`
+                    }
+                    ${productCount > 0 ? `<span class="category-badge">${productCount}</span>` : ''}
+                </div>
+                <div class="category-info">
+                    <h3 class="category-name">${cat.name_ar}</h3>
+                </div>
+            </div>
+        `;
+        fragment.appendChild(tempDiv.firstElementChild);
+    });
+    
+    container.innerHTML = '';
+    container.appendChild(fragment);
+}
+
+function renderProducts() {
+const container = document.getElementById('productsContainer');
+const emptyState = document.getElementById('emptyState');
+
+if (!container) {
+    return;
+}
+
+// If showing all categories, don't render products (categories only on main page)
+if (selectedCategoryId === 'all') {
+    container.innerHTML = '';
+    if (emptyState) {
+        emptyState.classList.add('hidden');
+    }
+    return;
+}
+
+// Display single category products with their sections
+const filtered = allProducts.filter(product => {
+    if (product.category_id !== selectedCategoryId) return false;
+    if (selectedSection === 'all') return true;
+    return product.section === selectedSection;
+});
+
+if (filtered.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) {
+        emptyState.classList.remove('hidden');
+    }
+    return;
+}
+
+if (emptyState) {
+    emptyState.classList.add('hidden');
+}
+
+// Get category sections for proper grouping
+const category = allCategories.find(cat => cat.id === selectedCategoryId);
+let categorySections = [];
+if (category && category.sections && Array.isArray(category.sections)) {
+    categorySections = category.sections.map(section => 
+        typeof section === 'string' ? section : section.name || section
+    );
+}
+
+// Group products by sections
+const productsBySection = {};
+filtered.forEach(product => {
+    const section = product.section || 'بدون قسم';
+    if (!productsBySection[section]) {
+        productsBySection[section] = [];
+    }
+    productsBySection[section].push(product);
+});
+
+// Display sections in the order defined in category, then other sections
+const orderedSections = [...categorySections];
+const otherSections = Object.keys(productsBySection).filter(
+    section => !categorySections.includes(section)
+);
+const allSections = [...orderedSections, ...otherSections];
+
+// Build HTML string for better performance (faster than DocumentFragment for complex structures)
+let html = '';
+let productIndex = 0;
+
+allSections.forEach(section => {
+    if (productsBySection[section]) {
+        html += `
+<div class="section-group mb-6">
+<h3 class="section-title text-lg font-bold mb-3 px-2" style="color: var(--primary-color);">
+${section}
+</h3>
+<div class="products-grid">
+`;
+        productsBySection[section].forEach(product => {
+            html += renderProductCard(product, productIndex++);
+        });
+        html += `
+</div>
+</div>
+`;
+    }
+});
+
+container.innerHTML = html;
+}
+
+function renderProductCard(product, index) {
+    const animationDelay = index * 60;
+    const imageUrl = product.image_url || '';
+    return `
+        <article class="product-card" style="animation-delay: ${animationDelay}ms;">
+            <div class="product-image-wrapper">
+                ${imageUrl ? `
+                    <img src="${imageUrl}" alt="${product.name_ar}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-thumb" style="display: none;">🍽️</div>
+                ` : `
+                    <div class="fallback-thumb">🍽️</div>
+                `}
+                ${product.is_featured ? '<span class="badge-featured">⭐ مميز</span>' : ''}
+            </div>
+            <div class="product-content">
+                <div class="product-header">
+                    <h3 class="product-name">${product.name_ar}</h3>
+                    ${product.name_en ? `<p class="product-name-en">${product.name_en}</p>` : ''}
+                    ${product.description_ar ? `<p class="product-description">${product.description_ar}</p>` : ''}
+                </div>
+                <div class="product-footer">
+                    <div class="price-chip">
+                        ${product.price} <span class="currency">${settings?.currency || 'ج.م'}</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+async function loadData() {
+    const loadingEl = getEl('loadingScreen');
+    try {
+        console.log('Loading data for restaurant:', restaurantId);
+        if (!restaurantId) {
+            console.error('No restaurant ID provided');
+            if (loadingEl) {
+                loadingEl.innerHTML = `
+                    <div class="text-center text-white px-4">
+                        <p class="text-xl font-semibold mb-2">❌ لم يتم تحديد المطعم</p>
+                        <p class="text-sm opacity-90">الرجاء فتح الرابط من خلال لوحة التحكم</p>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        // Parallel data loading for better performance
+        const [settingsData, categoriesData, productsData] = await Promise.all([
+            fetchAPI(`restaurant_settings?restaurant_id=eq.${restaurantId}`),
+            fetchAPI(`categories?restaurant_id=eq.${restaurantId}&is_active=eq.true&order=display_order.asc`),
+            fetchAPI(`products?restaurant_id=eq.${restaurantId}&is_available=eq.true&order=display_order.asc`)
+        ]);
+        
+        // Data loaded successfully
+
+        // Process settings
+        if (settingsData.length > 0) {
+            settings = settingsData[0];
+            const nameAr = settings.restaurant_name_ar || 'قائمة الطعام';
+            const nameEn = settings.restaurant_name_en || '';
+            const primaryColor = settings.primary_color || '#D97706';
+            setText('restaurantName', nameAr);
+            const taglineEl = getEl('restaurantTagline');
+            if (taglineEl) {
+                if (nameEn.trim()) {
+                    taglineEl.textContent = nameEn;
+                    taglineEl.classList.remove('hidden');
+                } else {
+                    taglineEl.classList.add('hidden');
+                }
+            }
+            const logoImg = getEl('restaurantLogo');
+            if (logoImg && settings.logo_url) {
+                logoImg.src = settings.logo_url;
+                logoImg.onerror = function() {
+                    this.parentElement.classList.add('hidden');
+                };
+            }
+
+            // Defer banner processing to improve initial load time
+            requestAnimationFrame(() => {
+                const adBannerContainer = getEl('adBannerContainer');
+                if (adBannerContainer) {
+                    const adBannerWrapper = getEl('adBannerWrapper');
+                    let slides = [];
+                    
+                    // Check for social media ad content first (prioritize video over image)
+                    if (settings.social_ad_video && isValidUrl(settings.social_ad_video)) {
+                        const videoUrl = getFacebookPostUrl(settings.social_ad_video);
+                        slides.push(`
+                            <div class="swiper-slide">
+                                <div class="relative w-full h-full">
+                                    <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
+                                        <video class="w-full h-full object-cover" controls autoplay muted loop playsinline onerror="handleMediaError(this, 'video')">
+                                            <source src="${videoUrl}" type="video/mp4">
+                                            <source src="${videoUrl}" type="video/webm">
+                                            <source src="${videoUrl}" type="video/ogg">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </a>
+                                </div>
+                            </div>
+                        `);
+                    } else if (settings.social_ad_image && isValidUrl(settings.social_ad_image)) {
+                        const imageUrl = getFacebookPostUrl(settings.social_ad_image);
+                        slides.push(`
+                            <div class="swiper-slide">
+                                <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
+                                    <img src="${imageUrl}" alt="Social Media Advertisement" loading="lazy" onerror="handleMediaError(this, 'image')">
+                                </a>
+                            </div>
+                        `);
+                    }
+                    
+                    // If no social media content, use uploaded banner images
+                    if (slides.length === 0 && settings.ad_banner_urls) {
+                        let bannerUrls = [];
+                        
+                        if (typeof settings.ad_banner_urls === 'string') {
+                            try {
+                                const parsed = JSON.parse(settings.ad_banner_urls);
+                                bannerUrls = Array.isArray(parsed) ? parsed : [settings.ad_banner_urls];
+                            } catch (e) {
+                                bannerUrls = [settings.ad_banner_urls];
+                            }
+                        } else if (Array.isArray(settings.ad_banner_urls)) {
+                            bannerUrls = settings.ad_banner_urls;
+                        }
+                        
+                        if (bannerUrls.length > 0) {
+                            slides = bannerUrls.map(url => `
+                                <div class="swiper-slide">
+                                    <div class="w-full h-full p-2">
+                                        <img src="${url}" alt="Advertisement" class="w-full h-full object-cover rounded-lg shadow-2xl ring-4 ring-amber-400/50 hover:ring-amber-400/70 transition-all duration-300" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg\\'>Failed to load image</div>';">
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    }
+                    
+                    // Display the banner if we have slides
+                    if (slides.length > 0) {
+                        adBannerWrapper.innerHTML = slides.join('');
+                        adBannerContainer.style.display = 'block';
+
+                        // Lazy load Swiper only when needed
+                        loadSwiperIfNeeded().then(() => {
+                            const swiperConfig = {
+                                pagination: {
+                                    el: '.swiper-pagination',
+                                    clickable: true,
+                                },
+                            };
+                            
+                            if (slides.length > 1) {
+                                swiperConfig.loop = true;
+                                swiperConfig.autoplay = {
+                                    delay: 3000,
+                                    disableOnInteraction: false,
+                                };
+                            }
+                            
+                            new Swiper('.ad-swiper', swiperConfig);
+                        }).catch(err => {
+                            console.error('Failed to load Swiper:', err);
+                        });
+                    }
+                }
+            });
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+
+            // Apply primary color to review FAB
+            const reviewFab = getEl('reviewFab');
+            if (reviewFab) {
+                reviewFab.style.backgroundColor = primaryColor;
+            }
+
+            // Apply primary color to review button in header
+            const reviewButtonHeader = getEl('reviewButtonHeader');
+            if (reviewButtonHeader) {
+                if (primaryColor) {
+                    reviewButtonHeader.style.background = `linear-gradient(135deg, ${primaryColor}, #f59e0b, #ec4899)`;
+                }
+                // Ensure review button is visible on main page
+                reviewButtonHeader.style.display = 'flex';
+            }
+
+            renderSocialLinks(settings);
+        }
+
+        // Process categories and products
+        allCategories = categoriesData || [];
+        allProducts = productsData || [];
+
+        // Render categories immediately for faster initial display
+        renderCategories();
+        
+        // Hide loading screen immediately after categories are rendered
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+            loadingEl.classList.add('hidden');
+        }
+        
+        // Process settings and banner in background (defer heavy operations)
+        requestAnimationFrame(() => {
+            // Use requestAnimationFrame for products (heavier operation)
+            renderProducts();
+            renderSectionFilters();
+            showRealtimeIndicator();
+        });
+
+    } catch (error) {
+        console.error('Error loading data:', error);
+        // Show error message but still hide loading screen
+        const container = getEl('categoriesContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="text-center py-12 px-4">
+                    <p class="text-red-400 text-xl font-semibold mb-3">❌ خطأ في تحميل البيانات</p>
+                    <p class="text-gray-300 mb-4">${error.message || 'يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى'}</p>
+                    <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium transition-colors">
+                        🔄 إعادة المحاولة
+                    </button>
+                </div>
+            `;
+        }
+        if (loadingEl) {
+            loadingEl.classList.add('hidden');
+        }
+    } finally {
+        // Loading screen is already hidden after categories render
+        // This is just a safety net
+        if (loadingEl && !loadingEl.classList.contains('hidden')) {
+            loadingEl.style.display = 'none';
+            loadingEl.classList.add('hidden');
+        }
+    }
+}
+
+// Review Modal Functions
+function openReviewModal() {
+    // Only allow opening review modal from main page (not from products/sections view)
+    if (isInProductsView) {
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'reviewModal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[10000] p-4';
+    modal.style.zIndex = '10000';
+    modal.onclick = function(e) { if (e.target === this) closeReviewModal(); };
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col review-modal-content" onclick="event.stopPropagation();">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">⭐ التقييمات</h3>
+                <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button onclick="switchReviewTab('add')" id="tabAddReview" class="flex-1 px-4 py-2 text-center font-medium text-gray-700 border-b-2 border-[var(--primary-color)] transition-colors">
+                    إضافة تقييم
+                </button>
+                <button onclick="switchReviewTab('view')" id="tabViewReviews" class="flex-1 px-4 py-2 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition-colors">
+                    آراء العملاء
+                </button>
+            </div>
+            
+            <!-- Tab Content: Add Review -->
+            <div id="tabContentAdd" class="flex-1 overflow-y-auto">
+                <form id="reviewForm" onsubmit="submitReview(event)">
+                    <!-- Customer Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <input type="text" id="customerName" placeholder="الاسم الكريم" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]" required>
+                        <input type="tel" id="customerPhone" placeholder="رقم الهاتف" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]" required>
+                        <input type="text" id="customerGovernorate" placeholder="المحافظة" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]" required>
+                        <input type="text" id="customerCity" placeholder="المدينة" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]" required>
+                    </div>
+
+                    <!-- Ratings -->
+                    <div class="space-y-4 mb-4">
+                        <div class="flex justify-between items-center"><span class="font-medium">تقييم المكان</span><div class="star-rating flex flex-row-reverse" data-rating-group="place"><input type="radio" id="place-5" name="place_rating" value="5"><label for="place-5">★</label><input type="radio" id="place-4" name="place_rating" value="4"><label for="place-4">★</label><input type="radio" id="place-3" name="place_rating" value="3"><label for="place-3">★</label><input type="radio" id="place-2" name="place_rating" value="2"><label for="place-2">★</label><input type="radio" id="place-1" name="place_rating" value="1" required><label for="place-1">★</label></div></div>
+                        <div class="flex justify-between items-center"><span class="font-medium">تقييم المنتجات</span><div class="star-rating flex flex-row-reverse" data-rating-group="products"><input type="radio" id="products-5" name="products_rating" value="5"><label for="products-5">★</label><input type="radio" id="products-4" name="products_rating" value="4"><label for="products-4">★</label><input type="radio" id="products-3" name="products_rating" value="3"><label for="products-3">★</label><input type="radio" id="products-2" name="products_rating" value="2"><label for="products-2">★</label><input type="radio" id="products-1" name="products_rating" value="1" required><label for="products-1">★</label></div></div>
+                        <div class="flex justify-between items-center"><span class="font-medium">تقييم الخدمة</span><div class="star-rating flex flex-row-reverse" data-rating-group="service"><input type="radio" id="service-5" name="service_rating" value="5"><label for="service-5">★</label><input type="radio" id="service-4" name="service_rating" value="4"><label for="service-4">★</label><input type="radio" id="service-3" name="service_rating" value="3"><label for="service-3">★</label><input type="radio" id="service-2" name="service_rating" value="2"><label for="service-2">★</label><input type="radio" id="service-1" name="service_rating" value="1" required><label for="service-1">★</label></div></div>
+                    </div>
+
+                    <!-- Comment -->
+                    <textarea id="reviewComment" placeholder="أخبرنا المزيد عن تجربتك..." class="w-full px-4 py-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]" rows="3"></textarea>
+                    
+                    <button type="submit" id="submitReviewBtn" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-gray-900 py-2 px-4 rounded-lg font-bold shadow-md hover:shadow-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-[1.01] transition-all duration-300 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>إرسال التقييم</span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Tab Content: View Reviews -->
+            <div id="tabContentView" class="flex-1 overflow-y-auto hidden">
+                <div id="reviewsListContainer" class="space-y-4">
+                    <p class="text-center text-gray-500">جاري تحميل التقييمات...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    getEl('reviewFabContainer').classList.add('hidden');
+    
+    // Load reviews when modal opens (after DOM is ready)
+    setTimeout(() => {
+        const container = getEl('reviewsListContainer');
+        if (container) {
+            loadAndRenderReviews();
+        } else {
+            console.error('reviewsListContainer not found after modal creation');
+        }
+    }, 200);
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        getEl('reviewFabContainer').classList.remove('hidden');
+        // Remove modal from DOM
+        modal.remove();
+    }
+}
+
+// Switch between review tabs
+function switchReviewTab(tab) {
+    const tabAdd = getEl('tabAddReview');
+    const tabView = getEl('tabViewReviews');
+    const contentAdd = getEl('tabContentAdd');
+    const contentView = getEl('tabContentView');
+    
+    if (!tabAdd || !tabView || !contentAdd || !contentView) return;
+    
+    if (tab === 'add') {
+        tabAdd.classList.add('border-[var(--primary-color)]', 'text-gray-700');
+        tabAdd.classList.remove('border-transparent', 'text-gray-500');
+        tabView.classList.remove('border-[var(--primary-color)]', 'text-gray-700');
+        tabView.classList.add('border-transparent', 'text-gray-500');
+        contentAdd.classList.remove('hidden');
+        contentView.classList.add('hidden');
+    } else {
+        tabView.classList.add('border-[var(--primary-color)]', 'text-gray-700');
+        tabView.classList.remove('border-transparent', 'text-gray-500');
+        tabAdd.classList.remove('border-[var(--primary-color)]', 'text-gray-700');
+        tabAdd.classList.add('border-transparent', 'text-gray-500');
+        contentView.classList.remove('hidden');
+        contentAdd.classList.add('hidden');
+        // Reload reviews when switching to view tab
+        // Wait a bit to ensure the tab is visible before loading
+        setTimeout(() => {
+            loadAndRenderReviews();
+        }, 100);
+    }
+}
+
+async function loadAndRenderReviews() {
+    // Find the visible container (check both modals)
+    let container = null;
+    
+    // Check if reviewModal is visible
+    const reviewModal = getEl('reviewModal');
+    if (reviewModal && !reviewModal.classList.contains('hidden')) {
+        const tabContentView = reviewModal.querySelector('#tabContentView');
+        if (tabContentView && !tabContentView.classList.contains('hidden')) {
+            container = tabContentView.querySelector('#reviewsListContainer');
+        }
+    }
+    
+    // If not found, check reviewsDisplayModal
+    if (!container) {
+        const reviewsDisplayModal = getEl('reviewsDisplayModal');
+        if (reviewsDisplayModal && !reviewsDisplayModal.classList.contains('hidden')) {
+            container = reviewsDisplayModal.querySelector('#reviewsListContainer');
+        }
+    }
+    
+    // Fallback to any container if still not found
+    if (!container) {
+        container = getEl('reviewsListContainer');
+    }
+    
+    if (!container) {
+        console.error('reviewsListContainer not found');
+        return;
+    }
+    
+    console.log('Using container:', container, 'Parent:', container.parentElement);
+    
+    if (!restaurantId) {
+        container.innerHTML = '<p class="text-center text-red-500 py-8">لم يتم تحديد المطعم</p>';
+        return;
+    }
+    
+    container.innerHTML = '<p class="text-center text-gray-500 py-4">جاري تحميل التقييمات...</p>';
+
+    try {
+        console.log('Loading reviews for restaurant:', restaurantId);
+        
+        // First, try to get all reviews (for debugging)
+        const allReviewsEndpoint = `reviews?restaurant_id=eq.${restaurantId}&order=created_at.desc`;
+        console.log('Fetching all reviews from:', allReviewsEndpoint);
+        const allReviews = await fetchAPI(allReviewsEndpoint);
+        console.log('All reviews (including unapproved):', allReviews);
+        console.log('Total reviews count:', allReviews?.length);
+        
+        // Then get only approved reviews
+        const endpoint = `reviews?restaurant_id=eq.${restaurantId}&is_approved=eq.true&order=created_at.desc`;
+        console.log('Fetching approved reviews from:', endpoint);
+        
+        const reviews = await fetchAPI(endpoint);
+        console.log('Reviews loaded:', reviews);
+        console.log('Reviews type:', typeof reviews);
+        console.log('Reviews is array:', Array.isArray(reviews));
+        console.log('Reviews length:', reviews?.length);
+        
+        if (!reviews) {
+            console.error('Reviews is null or undefined');
+            container.innerHTML = '<p class="text-center text-red-500 py-8">فشل في جلب البيانات</p>';
+            return;
+        }
+        
+        if (!Array.isArray(reviews)) {
+            console.error('Reviews is not an array:', reviews);
+            container.innerHTML = '<p class="text-center text-red-500 py-8">خطأ في تنسيق البيانات</p>';
+            return;
+        }
+        
+        if (reviews.length === 0) {
+            console.log('No approved reviews found');
+            // Show message with info about total reviews
+            if (allReviews && allReviews.length > 0) {
+                const pendingCount = allReviews.filter(r => !r.is_approved).length;
+                container.innerHTML = `
+                    <p class="text-center text-gray-500 py-8">
+                        لا توجد تقييمات موافق عليها لعرضها حاليًا.
+                        ${pendingCount > 0 ? `<br><span class="text-sm text-gray-400">(${pendingCount} تقييم قيد المراجعة)</span>` : ''}
+                    </p>
+                `;
+            } else {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد تقييمات لعرضها حاليًا.</p>';
+            }
+            return;
+        }
+
+        console.log('Processing', reviews.length, 'reviews');
+        const reviewsHtml = reviews.map((r, index) => {
+            console.log(`Review ${index + 1}:`, r);
+            
+            // Check if review has required fields
+            if (r.place_rating === undefined || r.products_rating === undefined || r.service_rating === undefined) {
+                console.warn('Invalid review data (missing ratings):', r);
+                return '';
+            }
+            
+            const placeRating = parseInt(r.place_rating) || 0;
+            const productsRating = parseInt(r.products_rating) || 0;
+            const serviceRating = parseInt(r.service_rating) || 0;
+            
+            const avgRating = Math.round((placeRating + productsRating + serviceRating) / 3);
+            const filledStars = '\u2605'.repeat(Math.max(0, Math.min(5, avgRating)));
+            const emptyStars = '\u2605'.repeat(Math.max(0, 5 - avgRating));
+            const location = (r.customer_governorate || '') + (r.customer_city ? ' - ' + r.customer_city : '');
+            
+            return `
+            <div class="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div class="flex items-start mb-2">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-800">${r.customer_name || 'عميل'}</h4>
+                        ${location ? `<p class="text-xs text-gray-400">${location}</p>` : ''}
+                    </div>
+                    <div class="text-sm text-yellow-500 font-bold flex items-center">
+                        ${filledStars}
+                        <span class="text-gray-300">${emptyStars}</span>
+                    </div>
+                </div>
+                ${r.comment ? '<p class="text-gray-700 text-sm mt-2">' + r.comment + '</p>' : ''}
+            </div>
+        `;
+        }).filter(html => html !== '').join('');
+        
+        console.log('Reviews HTML length:', reviewsHtml.length);
+        console.log('Container element:', container);
+        console.log('Container parent:', container.parentElement);
+        console.log('Container is visible:', container.offsetParent !== null);
+        console.log('Container classes:', container.className);
+        console.log('Container style:', container.style.cssText);
+        
+        if (reviewsHtml === '') {
+            console.warn('No valid reviews after processing');
+            container.innerHTML = '<p class="text-center text-gray-500 py-8">لا توجد تقييمات صالحة لعرضها.</p>';
+        } else {
+            // Clear container first
+            container.innerHTML = '';
+            
+            // Add content
+            container.innerHTML = reviewsHtml;
+            
+            console.log('Reviews displayed successfully');
+            console.log('Container innerHTML length after update:', container.innerHTML.length);
+            console.log('Container children count:', container.children.length);
+            
+            // Ensure container is visible
+            container.style.display = 'block';
+            container.style.visibility = 'visible';
+            container.style.opacity = '1';
+            
+            // Force a reflow to ensure the content is visible
+            void container.offsetHeight;
+            
+            // Check if content is actually visible
+            setTimeout(() => {
+                const firstReview = container.querySelector('div.border');
+                if (firstReview) {
+                    console.log('First review element found:', firstReview);
+                    console.log('First review is visible:', firstReview.offsetParent !== null);
+                    console.log('First review computed style:', window.getComputedStyle(firstReview).display);
+                } else {
+                    console.warn('No review elements found in container after update');
+                    console.log('Container HTML:', container.innerHTML.substring(0, 200));
+                }
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+        console.error('Error stack:', error.stack);
+        container.innerHTML = '<p class="text-center text-red-500 py-8">حدث خطأ في تحميل التقييمات: ' + (error.message || 'خطأ غير معروف') + '</p>';
+    }
+}
+
+async function submitReview(event) {
+    event.preventDefault();
+    const btn = getEl('submitReviewBtn');
+    btn.disabled = true;
+    const btnSpan = btn.querySelector('span');
+    if (btnSpan) {
+        btnSpan.textContent = 'جارٍ الإرسال...';
+    } else {
+        btn.textContent = 'جارٍ الإرسال...';
+    }
+
+    const reviewData = {
+        restaurant_id: restaurantId,
+        customer_name: getEl('customerName').value,
+        customer_phone: getEl('customerPhone').value,
+        customer_governorate: getEl('customerGovernorate').value,
+        customer_city: getEl('customerCity').value,
+        place_rating: parseInt(document.querySelector('input[name="place_rating"]:checked').value),
+        products_rating: parseInt(document.querySelector('input[name="products_rating"]:checked').value),
+        service_rating: parseInt(document.querySelector('input[name="service_rating"]:checked').value),
+        comment: getEl('reviewComment').value || null,
+        is_approved: false
+    };
+
+    try {
+        await fetchAPI('reviews', {
+            method: 'POST',
+            body: JSON.stringify(reviewData)
+        });
+        
+        getEl('reviewForm').reset();
+        // Switch to reviews tab after successful submission
+        switchReviewTab('view');
+        alert('شكرًا لك! تم استلام تقييمك بنجاح.');
+
+    } catch (error) {
+        console.error('Failed to submit review:', error);
+        alert('عذرًا، حدث خطأ أثناء إرسال التقييم. الرجاء المحاولة مرة أخرى.');
+    } finally {
+        btn.disabled = false;
+        if (btnSpan) {
+            btnSpan.textContent = 'إرسال التقييم';
+        } else {
+            btn.textContent = 'إرسال التقييم';
+        }
+    }
+}
+
+// Real-time connection
+let realtimeSubscription = null;
+
+// Initialize real-time client
+async function initRealtimeClient() {
+    // Retry loop: wait up to ~5 seconds for the UMD `supabase` lib to load
+    const maxAttempts = 10;
+    const delayMs = 500;
+    try {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            // Check if client already exists to avoid recreation
+            if (typeof window.__supabaseClient !== 'undefined' && window.__supabaseClient) {
+                supabaseClient = window.__supabaseClient;
+                break;
+            }
+            // Only create if supabase lib is available AND client doesn't exist yet
+            if (typeof supabase !== 'undefined' && !window.__supabaseClient) {
+                try {
+                    window.__supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    supabaseClient = window.__supabaseClient;
+                    console.log('Supabase client created successfully in initRealtimeClient');
+                    break;
+                } catch (e) {
+                    console.warn('Attempt to create Supabase client failed on attempt', attempt + 1, e);
+                }
+            }
+            // wait before next attempt (but not on last iteration)
+            if (attempt < maxAttempts - 1) {
+                await new Promise(r => setTimeout(r, delayMs));
+            }
+        }
+
+        if (!supabaseClient) {
+            console.warn('Supabase client not initialized for realtime after retries. Skipping realtime setup.');
+            return;
+        }
+
+        // Setup real-time subscriptions
+        setupRealtimeSubscriptions();
+        // Show real-time indicator
+        showRealtimeIndicator();
+    } catch (e) {
+        console.warn('Supabase client realtime init error:', e);
+    }
+}
+
+// Setup real-time subscriptions
+function setupRealtimeSubscriptions() {
+    if (!supabaseClient) {
+        console.warn('Cannot setup realtime subscriptions: supabaseClient is null');
+        return;
+    }
+    // Categories subscription
+    const categoriesSubscription = supabaseClient
+        .channel('public:categories')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'categories', filter: `restaurant_id=eq.${restaurantId}` })
+        .subscribe((payload) => {
+            handleRealtimeEvent('category', payload);
+        });
+    
+    // Products subscription
+    const productsSubscription = supabaseClient
+        .channel('public:products')
+        .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'products', filter: `restaurant_id=eq.${restaurantId}` })
+        .subscribe((payload) => {
+            handleRealtimeEvent('product', payload);
+        });
+}
+
+// Handle real-time events
+function handleRealtimeEvent(type, payload) {
+    const { eventType, newRecord, oldRecord } = payload;
+    
+    console.log(`Real-time ${eventType}:`, payload);
+    
+    // Batch real-time updates to avoid multiple renders
+    requestAnimationFrame(() => {
+        if (eventType === 'INSERT') {
+            if (type === 'category') {
+                allCategories.push(newRecord);
+                renderCategories();
+            } else if (type === 'product') {
+                allProducts.push(newRecord);
+                if (selectedCategoryId === 'all') renderProducts();
+            }
+        } else if (eventType === 'UPDATE') {
+            if (type === 'category') {
+                const index = allCategories.findIndex(c => c.id === newRecord.id);
+                if (index > -1) allCategories[index] = newRecord;
+                renderCategories();
+            } else if (type === 'product') {
+                const index = allProducts.findIndex(p => p.id === newRecord.id);
+                if (index > -1) allProducts[index] = newRecord;
+                if (selectedCategoryId === 'all' || newRecord.category_id === selectedCategoryId) {
+                    renderProducts();
+                }
+            }
+        } else if (eventType === 'DELETE') {
+            if (type === 'category') {
+                allCategories = allCategories.filter(c => c.id !== oldRecord.id);
+                renderCategories();
+            } else if (type === 'product') {
+                allProducts = allProducts.filter(p => p.id !== oldRecord.id);
+                if (selectedCategoryId === 'all' || oldRecord.category_id === selectedCategoryId) {
+                    renderProducts();
+                }
+            }
+        }
+    });
+}
+
+// Show real-time indicator
+function showRealtimeIndicator() {
+    const indicator = getEl('realtimeIndicator');
+    if (indicator) {
+        indicator.classList.add('active');
+    }
+}
+
+// Reviews Display Modal Functions (for products view)
+function openReviewsDisplayModal() {
+    const modal = getEl('reviewsDisplayModal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Load reviews when modal opens
+    setTimeout(() => {
+        const container = getEl('reviewsListContainer');
+        if (container) {
+            loadAndRenderReviews();
+        }
+    }, 200);
+}
+
+function closeReviewsDisplayModal() {
+    const modal = getEl('reviewsDisplayModal');
+    if (!modal) return;
+    
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+// Initialize app when DOM is loaded
+window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const urlRestaurantId = params.get('restaurant_id');
+    if (urlRestaurantId) {
+        restaurantId = urlRestaurantId;
+        localStorage.setItem('restaurantId', restaurantId);
+    }
+    if (!restaurantId) {
+        document.getElementById('loadingScreen').innerHTML = `
+            <div class="text-center text-white px-4">
+                <p class="text-xl font-semibold mb-2">لم يتم تحديد المطعم</p>
+                <p class="text-sm opacity-90">الرجاء فتح الرابط من خلال لوحة التحكم</p>
+            </div>
+        `;
+        return;
+    }
+    await initRealtimeClient();
+    await loadData();
+});
+
+</script>
+
+<!-- Reviews Display Modal -->
+<div id="reviewsDisplayModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[10000] p-4" onclick="closeReviewsDisplayModal()" style="z-index: 10000;">
+    <div class="bg-white rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto review-modal-content" onclick="event.stopPropagation();">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800">آراء عملائنا</h3>
+            <button onclick="closeReviewsDisplayModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+        </div>
+        <div id="reviewsListContainer" class="space-y-4">
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الطعام - مباشرة في الوقت الحقيقي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
+    <style>
+        :root {
+            --primary-color: #D97706;
+            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a4c 50%, #2c3e50 100%);
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .category-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .realtime-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            display: none;
+        }
+        
+        .realtime-indicator.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="restaurantName">قائمة الطعام</h1>
+            <div class="realtime-indicator" id="realtimeIndicator" title="اتصال مباشرة في الوقت الحقيقي"></div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div>جاري تحميل القائمة...</div>
+        </div>
+        
+        <div id="content" class="content">
+            <div id="categoriesContainer" class="categories-grid"></div>
+            <div id="productsContainer" class="products-grid" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const SUPABASE_URL = 'https://putgtsdgeyqyptamwpnx.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1dGd0c2RnZXlxeXB0YW13cG54Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODMxMzAsImV4cCI6MjA4Mjk1OTEzMH0.bo30DP6UxtpHSvKTCwtaUmkJR8aT-BNEhyrW35IKsVE';
+        const RESTAURANT_ID = '6886336e-d6b4-4c2b-b884-068d5eaf25a4';
+        
+        // State
+        let categories = [];
+        let products = [];
+        let selectedCategory = null;
+        let realtimeSubscription = null;
+        
+        // DOM Elements
+        const getEl = (id) => document.getElementById(id);
+        
+        // Real-time connection
+        let supabase = null;
+        
+        // Initialize Supabase client
+        async function initSupabase() {
+            if (typeof supabase !== 'undefined') {
+                supabase = window.supabase;
+            }
+            
+            if (supabase) {
+                // Get initial data
+                await loadInitialData();
+                
+                // Setup real-time subscriptions
+                setupRealtimeSubscriptions();
+                
+                // Show real-time indicator
+                showRealtimeIndicator();
+            }
+        }
+        
+        // Load initial data
+        async function loadInitialData() {
+            try {
+                const [categoriesData, productsData] = await Promise.all([
+                    supabase.from('categories')
+                        .select('*')
+                        .eq('restaurant_id', RESTAURANT_ID)
+                        .eq('is_active', true)
+                        .order('display_order', 'asc'),
+                    supabase.from('products')
+                        .select('*')
+                        .eq('restaurant_id', RESTAURANT_ID)
+                        .eq('is_available', true)
+                        .order('display_order', 'asc')
+                ]);
+                
+                categories = categoriesData || [];
+                products = productsData || [];
+                
+                // Update UI
+                updateCategoriesUI();
+                updateProductsUI();
+                
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                showError('فشل في تحميل البيانات');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Setup real-time subscriptions
+        function setupRealtimeSubscriptions() {
+            // Categories subscription
+            const categoriesSubscription = supabase
+                .channel('public:categories')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'categories', filter: `restaurant_id=eq.${RESTAURANT_ID}` })
+                .subscribe((payload) => {
+                    handleRealtimeEvent('category', payload);
+                });
+            
+            // Products subscription
+            const productsSubscription = supabase
+                .channel('public:products')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'products', filter: `restaurant_id=eq.${RESTAURANT_ID}` })
+                .subscribe((payload) => {
+                    handleRealtimeEvent('product', payload);
+                });
+        }
+        
+        // Handle real-time events
+        function handleRealtimeEvent(type, payload) {
+            const { eventType, newRecord, oldRecord } = payload;
+            
+            console.log(`Real-time ${eventType}:`, payload);
+            
+            if (eventType === 'INSERT') {
+                if (type === 'category') {
+                    categories.push(newRecord);
+                    updateCategoriesUI();
+                } else if (type === 'product') {
+                    products.push(newRecord);
+                    updateProductsUI();
+                }
+            } else if (eventType === 'UPDATE') {
+                if (type === 'category') {
+                    const index = categories.findIndex(c => c.id === newRecord.id);
+                    if (index > -1) categories[index] = newRecord;
+                    updateCategoriesUI();
+                } else if (type === 'product') {
+                    const index = products.findIndex(p => p.id === newRecord.id);
+                    if (index > -1) products[index] = newRecord;
+                    updateProductsUI();
+                }
+            } else if (eventType === 'DELETE') {
+                if (type === 'category') {
+                    categories = categories.filter(c => c.id !== oldRecord.id);
+                    updateCategoriesUI();
+                } else if (type === 'product') {
+                    products = products.filter(p => p.id !== oldRecord.id);
+                    updateProductsUI();
+                }
+            }
+        }
+        
+        // Update UI functions
+        function updateCategoriesUI() {
+            const container = getEl('categoriesContainer');
+            if (!container) return;
+            
+            container.innerHTML = categories.map((cat, index) => {
+                const productCount = products.filter(p => p.category_id === cat.id).length;
+                return `
+                    <div class="category-card fade-in" style="animation-delay: ${index * 100}ms;">
+                        <div class="category-image-wrapper">
+                            ${cat.image_url ? 
+                                `<img src="${cat.image_url}" alt="${cat.name_ar}" class="w-full h-32 object-cover">` :
+                                `<div class="text-4xl text-gray-400">📷</div>`
+                            }
+                            ${productCount > 0 ? `<span class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold">${productCount}</span>` : ''}
+                        </div>
+                        <div class="category-info">
+                            <h3>${cat.name_ar}</h3>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateProductsUI() {
+            const container = getEl('productsContainer');
+            if (!container) return;
+            
+            if (selectedCategory) {
+                const filteredProducts = products.filter(p => p.category_id === selectedCategory);
+                container.innerHTML = filteredProducts.map((product, index) => {
+                    return `
+                        <div class="product-card fade-in" style="animation-delay: ${index * 50}ms;">
+                            <div class="product-image">
+                                ${product.image_url ? 
+                                    `<img src="${product.image_url}" alt="${product.name_ar}" class="w-full h-32 object-cover">` :
+                                    `<div class="text-4xl text-gray-400">📷</div>`
+                                }
+                            </div>
+                            <div class="product-content">
+                                <h4>${product.name_ar}</h4>
+                                <p class="text-gray-600">${product.description_ar || ''}</p>
+                                <div class="product-footer">
+                                    <span class="text-lg font-bold">${product.price} ج.م</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">الرجاء إلى الفئات لعرض المنتجات</div>';
+            }
+        }
+        
+        // UI Helper functions
+        function selectCategory(categoryId) {
+            selectedCategory = categoryId;
+            updateProductsUI();
+        }
+        
+        function showLoading() {
+            getEl('loading').style.display = 'block';
+            getEl('content').style.display = 'none';
+        }
+        
+        function hideLoading() {
+            getEl('loading').style.display = 'none';
+            getEl('content').style.display = 'block';
+        }
+        
+        function showError(message) {
+            getEl('loading').innerHTML = `<div class="text-red-500">${message}</div>`;
+        }
+        
+        function showRealtimeIndicator() {
+            const indicator = getEl('realtimeIndicator');
+            if (indicator) {
+                indicator.classList.add('active');
+            }
+        }
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initSupabase();
+        });
+    </script>
+</body>
+</html>
