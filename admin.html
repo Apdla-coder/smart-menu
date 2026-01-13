@@ -402,7 +402,8 @@
                             <input type="text" id="restNameAr" placeholder="اسم المطعم بالعربي *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                             <input type="text" id="restNameEn" placeholder="Restaurant Name (English)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                             <input type="text" id="restCurrency" placeholder="العملة (مثال: ج.م)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
-                            <input type="text" id="restWhatsapp" placeholder="رقم الواتساب (201234567890)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
+                            <input type="text" id="restWhatsapp" placeholder="01xxxxxxxxx أو +201xxxxxxxxx" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400" onblur="document.getElementById('restWhatsapp').value = normalizeEgyptianPhone(document.getElementById('restWhatsapp').value)">
+                            <p class="text-xs text-gray-400 mt-1">✅ الصيغ المقبولة: 01234567890 أو +201234567890 أو 00201234567890 أو 201234567890</p>
                         </div>
                     </div>
                 </div>
@@ -933,6 +934,60 @@
 
             // فتح تطبيق البريد الافتراضي
             window.location.href = `mailto:${email}`;
+        }
+
+        // تحويل رقم الواتس آب المصري إلى صيغة دولية صحيحة
+        function normalizeEgyptianPhone(phone) {
+            if (!phone) return '';
+            
+            // إزالة جميع المسافات والعلامات غير الضرورية
+            phone = phone.trim().replace(/[\s\-\(\)]/g, '');
+            
+            // إذا بدأ بـ 01 (الصيغة المصرية المحلية) → حول إلى 20
+            if (phone.startsWith('01')) {
+                phone = '2' + phone;
+            }
+            // إذا بدأ بـ +20 (صيغة دولية مع +) → احذف +
+            else if (phone.startsWith('+20')) {
+                phone = phone.substring(1);
+            }
+            // إذا بدأ بـ 0020 (صيغة دولية مع 00) → حول إلى 20
+            else if (phone.startsWith('0020')) {
+                phone = phone.substring(2);
+            }
+            // إذا لم يبدأ بـ 20 وليس له بادئة صحيحة، افترض أنه رقم محلي
+            else if (!phone.startsWith('20')) {
+                phone = '20' + phone;
+            }
+            
+            return phone;
+        }
+
+        // تحويل رقم الواتس آب المصري إلى صيغة دولية صحيحة
+        function normalizeEgyptianPhone(phone) {
+            if (!phone) return '';
+            
+            // إزالة جميع المسافات والعلامات غير الضرورية
+            phone = phone.trim().replace(/[\s\-\(\)\.]/g, '');
+            
+            // إذا بدأ بـ 01 (الصيغة المصرية المحلية) → حول إلى 201
+            if (phone.startsWith('01')) {
+                phone = '2' + phone;
+            }
+            // إذا بدأ بـ +20 (صيغة دولية مع +) → احذف +
+            else if (phone.startsWith('+20')) {
+                phone = phone.substring(1);
+            }
+            // إذا بدأ بـ 0020 (صيغة دولية مع 00) → حول إلى 20
+            else if (phone.startsWith('0020')) {
+                phone = phone.substring(2);
+            }
+            // إذا لم يبدأ بـ 20 وليس له بادئة صحيحة، افترض أنه رقم محلي
+            else if (!phone.startsWith('20')) {
+                phone = '20' + phone;
+            }
+            
+            return phone;
         }
 
         // فتح رابط القائمة

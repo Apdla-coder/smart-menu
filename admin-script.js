@@ -8,6 +8,42 @@ var allProducts = [];
 var restaurantSettings = null;
 let bannerImageUrls = []; // To hold banner image URLs
 
+/**
+ * تحويل رقم الواتس آب المصري إلى صيغة دولية صحيحة
+ * يقبل الصيغ التالية:
+ * - 01234567890 (محلي)
+ * - +201234567890 (دولي مع +)
+ * - 00201234567890 (دولي مع 00)
+ * - 201234567890 (دولي بدون بادئة)
+ * @param {string} phone - رقم الواتس آب
+ * @returns {string} - الرقم بصيغة دولية صحيحة (201234567890)
+ */
+function normalizeEgyptianPhone(phone) {
+    if (!phone) return '';
+    
+    // إزالة جميع المسافات والعلامات غير الضرورية
+    phone = phone.trim().replace(/[\s\-\(\)\.]/g, '');
+    
+    // إذا بدأ بـ 01 (الصيغة المصرية المحلية) → حول إلى 201
+    if (phone.startsWith('01')) {
+        phone = '2' + phone;
+    }
+    // إذا بدأ بـ +20 (صيغة دولية مع +) → احذف +
+    else if (phone.startsWith('+20')) {
+        phone = phone.substring(1);
+    }
+    // إذا بدأ بـ 0020 (صيغة دولية مع 00) → حول إلى 20
+    else if (phone.startsWith('0020')) {
+        phone = phone.substring(2);
+    }
+    // إذا لم يبدأ بـ 20 وليس له بادئة صحيحة، افترض أنه رقم محلي
+    else if (!phone.startsWith('20')) {
+        phone = '20' + phone;
+    }
+    
+    return phone;
+}
+
 // Debug function for banner troubleshooting
 window.debugBanner = function() {
     console.log('=== BANNER DEBUG INFO ===');
@@ -792,7 +828,7 @@ async function saveSettings() {
         const nameAr = restNameArEl ? restNameArEl.value.trim() : '';
         const nameEn = restNameEnEl ? restNameEnEl.value.trim() : '';
         const currency = currencyEl ? currencyEl.value.trim() : 'ج.م';
-        const whatsapp = whatsappEl ? whatsappEl.value.trim() : '';
+        const whatsapp = whatsappEl ? normalizeEgyptianPhone(whatsappEl.value.trim()) : '';
         const primaryColor = primaryColorEl ? primaryColorEl.value : '#D97706';
         const logo = logoEl ? logoEl.value.trim() : '';
         const facebook = fbEl ? fbEl.value.trim() : '';
