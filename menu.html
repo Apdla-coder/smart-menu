@@ -308,6 +308,8 @@ body {
         height: 60px;
         left: 15px;
         bottom: 60px;
+        top: 20px;
+        display: none;
     }
 }
 
@@ -384,6 +386,7 @@ body {
     color: var(--primary-color) !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     font-weight: 800;
+    text-align: center;
 }
 
 /* Category Name - Improved readability */
@@ -494,6 +497,13 @@ body {
         width: 20px;
         height: 20px;
     }
+}
+
+/* Flavor Chip Styling */
+.flavor-chip {
+    color: #3b82f6;
+    font-weight: 600;
+    margin: 0 4px 0 0;
 }
 </style>
 </head>
@@ -654,6 +664,13 @@ body {
 جرّب تعديل الفئة أو البحث عن كلمة مختلفة.
 </p>
 </div>
+</div>
+
+<!-- Back Button -->
+<div style="text-align: left; padding: 20px; padding-bottom: 10px; margin-top: 20px;">
+    <button onclick="backToCategories()" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);">
+        ← رجوع
+    </button>
 </div>
 
 <!-- Footer in Products View -->
@@ -1082,7 +1099,7 @@ async function fetchAPI(endpoint, options = {}) {
                     const resourceMatch = table.match(/^([^?\/]+)/);
                     const resource = resourceMatch ? resourceMatch[1] : table;
                     const defaultSelects = {
-                        products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section',
+                        products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section,flavors,sizes_prices',
                         categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
                         users: 'id,email,full_name,role',
                         restaurant_settings: 'id,primary_color,logo_url,restaurant_id,restaurant_name_ar,restaurant_name_en,ad_banner_urls,social_ad_image,social_ad_video,facebook_url,instagram_url,tiktok_url,whatsapp_number,currency',
@@ -1122,7 +1139,7 @@ async function fetchAPI(endpoint, options = {}) {
         const resourceMatch = endpoint.match(/^([^?\/]+)/);
         const resource = resourceMatch ? resourceMatch[1] : endpoint.split('?')[0];
         const defaultSelects = {
-            products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section',
+            products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,section,flavors,sizes_prices',
             categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
             users: 'id,email,full_name,role',
             restaurant_settings: 'id,primary_color,logo_url,restaurant_id,restaurant_name_ar,restaurant_name_en,ad_banner_urls,social_ad_image,social_ad_video,facebook_url,instagram_url,tiktok_url,whatsapp_number,currency',
@@ -1310,9 +1327,41 @@ container.innerHTML = html;
 function renderProductCard(product, index) {
     const animationDelay = index * 60;
     const imageUrl = product.image_url || '';
+    
+    // Load flavors and sizes from database
+    let flavors = [];
+    let sizesPrices = [];
+    
+    try {
+        if (product.flavors) {
+            flavors = typeof product.flavors === 'string' ? JSON.parse(product.flavors) : product.flavors;
+        }
+        if (product.sizes_prices) {
+            sizesPrices = typeof product.sizes_prices === 'string' ? JSON.parse(product.sizes_prices) : product.sizes_prices;
+        }
+    } catch (e) {
+        console.error('Error parsing flavors/sizes:', e);
+    }
+    
+    // Parse flavors - display as simple text with dashes
+    let flavorsHtml = '';
+    if (flavors && flavors.length > 0) {
+        const flavorText = flavors.join(' - ');
+        flavorsHtml = `<div style="margin: 8px 0; font-size: 0.85rem; color: #ddd;"><span style="color: #f97316; font-weight: 600;">النكهات:</span> ${flavorText}</div>`;
+    }
+    
+    // Parse sizes and prices - display S-M-L format
+    let sizePricesHtml = '';
+    if (sizesPrices && sizesPrices.length > 0) {
+        const sizeChips = sizesPrices.map(sp => 
+            `<span class="price-chip" style="display: inline-block; margin: 0 4px 4px 0; direction: ltr;">${sp.size}: ${sp.price}${settings?.currency || 'ج.م'}</span>`
+        ).join('');
+        sizePricesHtml = `<div style="margin: 8px 0; display: flex; flex-wrap: wrap;">${sizeChips}</div>`;
+    }
+    
     return `
         <article class="product-card" style="animation-delay: ${animationDelay}ms;">
-            <div class="product-image-wrapper" style="width:180px;">
+            <div class="product-image-wrapper" style="width:150px;">
                 ${imageUrl ? `
                     <img src="${imageUrl}" alt="${product.name_ar}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="fallback-thumb" style="display: none;">🍽️</div>
@@ -1327,10 +1376,13 @@ function renderProductCard(product, index) {
                     ${product.name_en ? `<p class="product-name-en">${product.name_en}</p>` : ''}
                     ${product.description_ar ? `<p class="product-description" style="color: var(--secondary-color);">${product.description_ar}</p>` : ''}
                 </div>
-                <div class="product-footer">
-                    <div class="price-chip">
+                <div class="product-footer" style="    flex-direction: inherit;
+">
+                    ${flavorsHtml}
+                    ${sizePricesHtml}
+                    ${sizesPrices.length === 0 ? `<div class="price-chip" style="display: inline-block; margin-top: 8px;">
                         ${product.price} <span class="currency">${settings?.currency || 'ج.م'}</span>
-                    </div>
+                    </div>` : ''}
                 </div>
             </div>
         </article>

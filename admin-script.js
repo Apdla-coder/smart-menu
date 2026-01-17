@@ -730,6 +730,17 @@ async function addProduct() {
     const description = document.getElementById('prodDescAr').value.trim();
     const featured = document.getElementById('prodFeatured').checked;
     const imageFile = document.getElementById('prodImageFile').files[0];
+    const flavors = JSON.parse(document.getElementById('prodFlavors').value || '[]');
+    
+    // Get the three sizes prices (S, M, L)
+    const priceS = parseFloat(document.getElementById('prodPriceS').value) || null;
+    const priceM = parseFloat(document.getElementById('prodPriceM').value) || null;
+    const priceL = parseFloat(document.getElementById('prodPriceL').value) || null;
+    
+    const sizesPrices = [];
+    if (priceS !== null) sizesPrices.push({ size: 'S', price: priceS });
+    if (priceM !== null) sizesPrices.push({ size: 'M', price: priceM });
+    if (priceL !== null) sizesPrices.push({ size: 'L', price: priceL });
 
     if (!categoryId || !nameAr || !price) {
         utils.notify('⚠️ الرجاء ملء الحقول المطلوبة', 'error');
@@ -754,7 +765,9 @@ async function addProduct() {
             is_available: true,
             is_featured: featured,
             image_url: imageUrl || null,
-            section: section || null
+            section: section || null,
+            flavors: flavors.length > 0 ? JSON.stringify(flavors) : null,
+            sizes_prices: sizesPrices.length > 0 ? JSON.stringify(sizesPrices) : null
         });
 
         if (result) {
@@ -768,6 +781,11 @@ async function addProduct() {
             document.getElementById('prodFeatured').checked = false;
             document.getElementById('prodImageFile').value = '';
             document.getElementById('prodImagePreview').classList.add('hidden');
+            document.getElementById('prodFlavors').value = '[]';
+            document.getElementById('prodPriceS').value = '';
+            document.getElementById('prodPriceM').value = '';
+            document.getElementById('prodPriceL').value = '';
+            document.getElementById('prodFlavorsList').innerHTML = '';
             await loadAllData(false);
         }
     } catch (error) {
@@ -1240,6 +1258,24 @@ function openEditProductModal(productId) {
     document.getElementById('editProdDescAr').value = prod.description_ar || '';
     document.getElementById('editProdFeatured').checked = prod.is_featured;
     
+    // Load flavors and sizes from database
+    const flavors = prod.flavors ? JSON.parse(prod.flavors) : [];
+    const sizesPrices = prod.sizes_prices ? JSON.parse(prod.sizes_prices) : [];
+    
+    document.getElementById('editProdFlavors').value = JSON.stringify(flavors);
+    renderFlavorsList(document.getElementById('editProdFlavorsList'), flavors, 'removeEditFlavor');
+    
+    // Populate S, M, L prices from database
+    const sMap = sizesPrices.find(sp => sp.size === 'S');
+    const mMap = sizesPrices.find(sp => sp.size === 'M');
+    const lMap = sizesPrices.find(sp => sp.size === 'L');
+    
+    document.getElementById('editProdPriceS').value = sMap ? sMap.price : '';
+    document.getElementById('editProdPriceM').value = mMap ? mMap.price : '';
+    document.getElementById('editProdPriceL').value = lMap ? lMap.price : '';
+    
+    document.getElementById('editProdSizesPrices').value = JSON.stringify(sizesPrices);
+    
     // Populate category dropdown
     const catSelect = document.getElementById('editProdCategory');
     if (catSelect) {
@@ -1410,6 +1446,17 @@ async function updateProduct() {
     const description = document.getElementById('editProdDescAr').value.trim();
     const featured = document.getElementById('editProdFeatured').checked;
     const imageFile = document.getElementById('editProdImageFile').files[0];
+    const flavors = JSON.parse(document.getElementById('editProdFlavors').value || '[]');
+    
+    // Get the three sizes prices (S, M, L)
+    const priceS = parseFloat(document.getElementById('editProdPriceS').value) || null;
+    const priceM = parseFloat(document.getElementById('editProdPriceM').value) || null;
+    const priceL = parseFloat(document.getElementById('editProdPriceL').value) || null;
+    
+    const sizesPrices = [];
+    if (priceS !== null) sizesPrices.push({ size: 'S', price: priceS });
+    if (priceM !== null) sizesPrices.push({ size: 'M', price: priceM });
+    if (priceL !== null) sizesPrices.push({ size: 'L', price: priceL });
 
     if (!categoryId || !nameAr || !price) {
         utils.notify('⚠️ الرجاء ملء الحقول المطلوبة', 'error');
@@ -1432,7 +1479,9 @@ async function updateProduct() {
             price: price,
             description_ar: description,
             is_featured: featured,
-            section: section || null
+            section: section || null,
+            flavors: flavors.length > 0 ? JSON.stringify(flavors) : null,
+            sizes_prices: sizesPrices.length > 0 ? JSON.stringify(sizesPrices) : null
         };
 
         // Only update image if new one was uploaded
@@ -2027,4 +2076,135 @@ async function quickDeleteSection(categoryId, sectionName) {
     } finally {
         loading.hide();
     }
+}
+// ========== FLAVORS MANAGEMENT ==========
+
+function addFlavorToList() {
+    const input = document.getElementById('prodFlavorInput');
+    const flavor = input.value.trim();
+    if (!flavor) {
+        utils.notify('⚠️ أدخل نكهة', 'warning');
+        return;
+    }
+
+    const flavorsList = document.getElementById('prodFlavorsList');
+    const flavorsData = JSON.parse(document.getElementById('prodFlavors').value);
+    
+    if (!flavorsData.includes(flavor)) {
+        flavorsData.push(flavor);
+        document.getElementById('prodFlavors').value = JSON.stringify(flavorsData);
+        renderFlavorsList(flavorsList, flavorsData, 'removeFlavor');
+        input.value = '';
+    }
+}
+
+function addFlavorToEditList() {
+    const input = document.getElementById('editProdFlavorInput');
+    const flavor = input.value.trim();
+    if (!flavor) {
+        utils.notify('⚠️ أدخل نكهة', 'warning');
+        return;
+    }
+
+    const flavorsList = document.getElementById('editProdFlavorsList');
+    const flavorsData = JSON.parse(document.getElementById('editProdFlavors').value);
+    
+    if (!flavorsData.includes(flavor)) {
+        flavorsData.push(flavor);
+        document.getElementById('editProdFlavors').value = JSON.stringify(flavorsData);
+        renderFlavorsList(flavorsList, flavorsData, 'removeEditFlavor');
+        input.value = '';
+    }
+}
+
+function removeFlavor(flavor) {
+    const flavorsData = JSON.parse(document.getElementById('prodFlavors').value);
+    const filtered = flavorsData.filter(f => f !== flavor);
+    document.getElementById('prodFlavors').value = JSON.stringify(filtered);
+    renderFlavorsList(document.getElementById('prodFlavorsList'), filtered, 'removeFlavor');
+}
+
+function removeEditFlavor(flavor) {
+    const flavorsData = JSON.parse(document.getElementById('editProdFlavors').value);
+    const filtered = flavorsData.filter(f => f !== flavor);
+    document.getElementById('editProdFlavors').value = JSON.stringify(filtered);
+    renderFlavorsList(document.getElementById('editProdFlavorsList'), filtered, 'removeEditFlavor');
+}
+
+function renderFlavorsList(container, flavors, removeFunc) {
+    container.innerHTML = flavors.map(f => `
+        <span class="inline-block bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+            ${f}
+            <button type="button" onclick="${removeFunc}('${f}')" class="ml-2 font-bold">×</button>
+        </span>
+    `).join('');
+}
+
+// ========== SIZES & PRICES MANAGEMENT ==========
+
+function addSizeToPriceList() {
+    const sizeInput = document.getElementById('prodSizeInput');
+    const priceInput = document.getElementById('prodSizePrice');
+    const size = sizeInput.value.trim();
+    const price = priceInput.value.trim();
+
+    if (!size || !price) {
+        utils.notify('⚠️ أدخل الحجم والسعر', 'warning');
+        return;
+    }
+
+    const sizesList = document.getElementById('prodSizesList');
+    const sizesData = JSON.parse(document.getElementById('prodSizesPrices').value);
+    
+    const newItem = { size, price: parseFloat(price) };
+    sizesData.push(newItem);
+    document.getElementById('prodSizesPrices').value = JSON.stringify(sizesData);
+    renderSizesList(sizesList, sizesData, 'removeSizePrice');
+    sizeInput.value = '';
+    priceInput.value = '';
+}
+
+function addSizeToEditPriceList() {
+    const sizeInput = document.getElementById('editProdSizeInput');
+    const priceInput = document.getElementById('editProdSizePrice');
+    const size = sizeInput.value.trim();
+    const price = priceInput.value.trim();
+
+    if (!size || !price) {
+        utils.notify('⚠️ أدخل الحجم والسعر', 'warning');
+        return;
+    }
+
+    const sizesList = document.getElementById('editProdSizesList');
+    const sizesData = JSON.parse(document.getElementById('editProdSizesPrices').value);
+    
+    const newItem = { size, price: parseFloat(price) };
+    sizesData.push(newItem);
+    document.getElementById('editProdSizesPrices').value = JSON.stringify(sizesData);
+    renderSizesList(sizesList, sizesData, 'removeEditSizePrice');
+    sizeInput.value = '';
+    priceInput.value = '';
+}
+
+function removeSizePrice(index) {
+    const sizesData = JSON.parse(document.getElementById('prodSizesPrices').value);
+    sizesData.splice(index, 1);
+    document.getElementById('prodSizesPrices').value = JSON.stringify(sizesData);
+    renderSizesList(document.getElementById('prodSizesList'), sizesData, 'removeSizePrice');
+}
+
+function removeEditSizePrice(index) {
+    const sizesData = JSON.parse(document.getElementById('editProdSizesPrices').value);
+    sizesData.splice(index, 1);
+    document.getElementById('editProdSizesPrices').value = JSON.stringify(sizesData);
+    renderSizesList(document.getElementById('editProdSizesList'), sizesData, 'removeEditSizePrice');
+}
+
+function renderSizesList(container, sizes, removeFunc) {
+    container.innerHTML = sizes.map((item, index) => `
+        <div class="flex justify-between items-center bg-green-100 p-2 rounded">
+            <span>${item.size}: ${item.price}</span>
+            <button type="button" onclick="${removeFunc}(${index})" class="text-red-600 font-bold">×</button>
+        </div>
+    `).join('');
 }

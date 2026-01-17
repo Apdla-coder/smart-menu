@@ -156,6 +156,37 @@
                 <input type="number" step="0.01" id="editProdPrice" placeholder="السعر" class="px-4 py-2 border rounded-lg">
                 <textarea id="editProdDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-2" rows="2"></textarea>
                 
+                <!-- Flavors Section -->
+                <div class="col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
+                    <h4 class="font-semibold text-sm">🍨 النكهات (اختياري)</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="editProdFlavorInput" placeholder="أدخل نكهة" class="flex-1 px-3 py-2 border rounded-lg text-sm">
+                        <button type="button" onclick="addFlavorToEditList()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm">إضافة</button>
+                    </div>
+                    <div id="editProdFlavorsList" class="flex flex-wrap gap-2"></div>
+                    <input type="hidden" id="editProdFlavors" value="[]">
+                </div>
+
+                <!-- Sizes & Prices Section -->
+                <div class="col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
+                    <h4 class="font-semibold text-sm">� أسعار الأحجام (S-M-L)</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-600">S (صغير)</label>
+                            <input type="number" step="0.01" id="editProdPriceS" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-600">M (متوسط)</label>
+                            <input type="number" step="0.01" id="editProdPriceM" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-600">L (كبير)</label>
+                            <input type="number" step="0.01" id="editProdPriceL" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm">
+                        </div>
+                    </div>
+                    <input type="hidden" id="editProdSizesPrices" value="[]">
+                </div>
+                
                 <!-- Image Upload Section -->
                 <div class="col-span-2 space-y-3 border rounded-lg p-4 bg-gray-50">
                     <h4 class="font-semibold text-sm">📸 صورة المنتج</h4>
@@ -295,6 +326,37 @@
                         <input type="text" id="prodNameEn" placeholder="Product Name (English)" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                         <input type="number" step="0.01" id="prodPrice" placeholder="السعر *" class="px-4 py-2 border rounded-lg focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400">
                         <textarea id="prodDescAr" placeholder="الوصف بالعربي" class="px-4 py-2 border rounded-lg col-span-1 md:col-span-2 focus:border-blue-500 focus:outline-none bg-slate-700 text-white placeholder-gray-400" rows="2"></textarea>
+                        
+                        <!-- Flavors Section -->
+                        <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-slate-700 border-slate-600">
+                            <h4 class="font-semibold text-sm text-gray-200">🍨 النكهات (اختياري)</h4>
+                            <div class="flex gap-2">
+                                <input type="text" id="prodFlavorInput" placeholder="أدخل نكهة (مثل: فانيليا)" class="flex-1 px-3 py-2 border rounded-lg text-sm bg-slate-600 text-white placeholder-gray-400">
+                                <button type="button" onclick="addFlavorToList()" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm">إضافة</button>
+                            </div>
+                            <div id="prodFlavorsList" class="flex flex-wrap gap-2"></div>
+                            <input type="hidden" id="prodFlavors" value="[]">
+                        </div>
+
+                        <!-- Sizes & Prices Section -->
+                        <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-slate-700 border-slate-600">
+                            <h4 class="font-semibold text-sm text-gray-200">� أسعار الأحجام (S-M-L)</h4>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="space-y-1">
+                                    <label class="text-xs text-gray-300">S (صغير)</label>
+                                    <input type="number" step="0.01" id="prodPriceS" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm bg-slate-600 text-white placeholder-gray-400">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-gray-300">M (متوسط)</label>
+                                    <input type="number" step="0.01" id="prodPriceM" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm bg-slate-600 text-white placeholder-gray-400">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-gray-300">L (كبير)</label>
+                                    <input type="number" step="0.01" id="prodPriceL" placeholder="السعر" class="w-full px-3 py-2 border rounded-lg text-sm bg-slate-600 text-white placeholder-gray-400">
+                                </div>
+                            </div>
+                            <input type="hidden" id="prodSizesPrices" value="[]">
+                        </div>
                         
                         <!-- Image Upload Section -->
                         <div class="col-span-1 md:col-span-2 space-y-3 border rounded-lg p-4 bg-slate-700 border-slate-600">
@@ -1048,7 +1110,7 @@
             if (method === 'GET' && !/select=/i.test(endpoint)) {
                 const resource = endpoint.split('?')[0].split('/')[0];
                 const defaultSelects = {
-                    products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order',
+                    products: 'id,name_ar,name_en,price,image_url,is_available,is_featured,category_id,description_ar,display_order,flavors,sizes_prices',
                     categories: 'id,name_ar,name_en,is_active,sections,display_order,image_url',
                     users: 'id,email,full_name,role',
                     restaurant_settings: 'id,primary_color,logo_url,restaurant_id',
