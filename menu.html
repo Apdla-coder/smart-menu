@@ -26,6 +26,39 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Mobile Optimizations for Performance */
+@media (max-width: 768px) {
+    #menuHeader, 
+    #socialLinksContainer, 
+    #socialLinksContainer a, 
+    #reviewButtonHeader, 
+    #reviewFab, 
+    .fab-text, 
+    .loading-screen, 
+    .category-card, 
+    .section-title, 
+    #productsView .sticky.top-0 {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    [style*="perspective"] {
+        perspective: none !important;
+    }
+
+    .menu-card:hover, .category-card:hover {
+        transform: translateY(-2px) !important;
+    }
+
+    .floating {
+        animation: none !important;
+    }
+
+    .floating-mascot {
+        animation: none !important;
+    }
+}
+
 #headerAccent {
     position: absolute;
     top: 0;
@@ -505,6 +538,74 @@ body {
     font-weight: 600;
     margin: 0 4px 0 0;
 }
+
+/* Image loading optimization - Prevent layout shift */
+.product-image,
+.category-image-wrapper img,
+#adBannerContainer img {
+    background-color: rgba(255, 255, 255, 0.05);
+    animation: imageFadeIn 0.4s ease-in-out;
+}
+
+@keyframes imageFadeIn {
+    from {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Fallback thumbnail styling */
+.fallback-thumb,
+.category-icon {
+    font-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    width: 100%;
+    height: 100%;
+}
+
+/* Lazy loading placeholder */
+img[loading="lazy"] {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Image error state */
+img[onerror] {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.image-logo-overlay {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    padding: 3px;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    border: 1px solid rgba(0,0,0,0.1);
+}
 </style>
 </head>
 <body class="min-h-screen">
@@ -878,6 +979,20 @@ return url;
 }
 }
 
+// Image optimization function to bypass Facebook CDN 403 errors
+// Optimize image URLs for faster loading and better performance
+function optimizeImageUrl(url, width = 400) {
+    if (!url) return '';
+    try {
+        const encodedUrl = encodeURIComponent(url);
+        // Use images.weserv.nl for all images to ensure they are optimized, resized, and served as WebP
+        return `https://images.weserv.nl/?url=${encodedUrl}&w=${width}&output=webp&q=80`;
+    } catch (e) {
+        console.warn('Error optimizing image URL:', e);
+        return url; // Fallback to original URL on error
+    }
+}
+
 // Handle media loading errors
 function handleMediaError(element, type) {
 console.warn(`Failed to load ${type}:`, element.src);
@@ -1218,8 +1333,9 @@ function renderCategories() {
             <div class="category-card" onclick="selectCategory('${cat.id}')" style="animation-delay: ${animationDelay}ms;">
                 <div class="category-image-wrapper">
                     ${cat.image_url ?
-                        `<img src="${cat.image_url}" alt="${cat.name_ar}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="category-icon" style="display: none;">${icon}</div>` :
+                        `<img src="${optimizeImageUrl(cat.image_url, 300)}" alt="${cat.name_ar}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="category-icon" style="display: none;">${icon}</div>
+                            ${settings?.logo_url ? `<img src="${settings.logo_url}" class="image-logo-overlay" alt="logo">` : ''}` :
                         `<div class="category-icon">${icon}</div>`
                     }
                     ${productCount > 0 ? `<span class="category-badge">${productCount}</span>` : ''}
@@ -1363,8 +1479,9 @@ function renderProductCard(product, index) {
         <article class="product-card" style="animation-delay: ${animationDelay}ms;">
             <div class="product-image-wrapper" style="width:150px;">
                 ${imageUrl ? `
-                    <img src="${imageUrl}" alt="${product.name_ar}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <img src="${optimizeImageUrl(imageUrl, 400)}" alt="${product.name_ar}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="fallback-thumb" style="display: none;">🍽️</div>
+                    ${settings?.logo_url ? `<img src="${settings.logo_url}" class="image-logo-overlay" alt="logo">` : ''}
                 ` : `
                     <div class="fallback-thumb">🍽️</div>
                 `}
@@ -1465,10 +1582,11 @@ async function loadData() {
                         `);
                     } else if (settings.social_ad_image && isValidUrl(settings.social_ad_image)) {
                         const imageUrl = getFacebookPostUrl(settings.social_ad_image);
+                        const proxyImageUrl = optimizeImageUrl(imageUrl, 800);
                         slides.push(`
                             <div class="swiper-slide">
                                 <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
-                                    <img src="${imageUrl}" alt="Social Media Advertisement" loading="lazy" onerror="handleMediaError(this, 'image')">
+                                    <img src="${proxyImageUrl}" alt="Social Media Advertisement" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EImage unavailable%3C/text%3E%3C/svg%3E';">
                                 </a>
                             </div>
                         `);
@@ -1493,7 +1611,7 @@ async function loadData() {
                             slides = bannerUrls.map(url => `
                                 <div class="swiper-slide">
                                     <div class="w-full h-full p-2">
-                                        <img src="${url}" alt="Advertisement" class="w-full h-full object-cover rounded-lg shadow-2xl ring-4 ring-amber-400/50 hover:ring-amber-400/70 transition-all duration-300" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-500 bg-gray-100 rounded-lg\\'>Failed to load image</div>';">
+                                        <img src="${optimizeImageUrl(url, 800)}" alt="Advertisement" class="w-full h-full object-cover rounded-lg shadow-2xl ring-4 ring-amber-400/50 hover:ring-amber-400/70 transition-all duration-300" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-family=%22Arial%22 font-size=%2220%22 fill=%22%239ca3af%22%3EImage unavailable%3C/text%3E%3C/svg%3E'; this.style.opacity='0.7';">
                                     </div>
                                 </div>
                             `);
@@ -2110,8 +2228,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         `;
         return;
     }
-    await initRealtimeClient();
     await loadData();
+    initRealtimeClient(); // Initialize realtime in background without awaiting it
 });
 
 </script>

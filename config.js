@@ -584,6 +584,23 @@ const utils = {
      */
     isValidPhone(phone) {
         return /^[0-9\+\-\s\(\)]{7,}$/.test(phone);
+    },
+
+    /**
+     * Image optimization function to bypass Facebook CDN 403 errors
+     * and improve performance via WebP conversion and resizing
+     */
+    optimizeImageUrl(url, width = 400) {
+        if (!url) return '';
+        if (url.startsWith('data:')) return url;
+        try {
+            const encodedUrl = encodeURIComponent(url);
+            // Use images.weserv.nl for all images to ensure they are optimized, resized, and served as WebP
+            return `https://images.weserv.nl/?url=${encodedUrl}&w=${width}&output=webp&q=80`;
+        } catch (e) {
+            console.warn('Error optimizing image URL:', e);
+            return url;
+        }
     }
 };
 
@@ -635,4 +652,4 @@ window.api = api;
 window.session = session;
 window.utils = utils;
 window.loading = loading;
-window.dataCache = dataCache; // Export dataCache globally
+window.dataCache = dataCache; // Export dataCache globallywindow.optimizeImageUrl = utils.optimizeImageUrl; 

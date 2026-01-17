@@ -375,11 +375,18 @@ function updateProductsList() {
         div.className = 'bg-white rounded-lg shadow-sm hover:shadow-md transition overflow-hidden flex';
         
         // Build HTML string once instead of multiple innerHTML operations
-        const imageUrl = p.image_url ? 
-            `src="${p.image_url}" alt="${p.name_ar}" class="w-24 h-24 object-cover" loading="lazy">` : 
-            '<div class="w-24 h-24 bg-gray-200 flex items-center justify-center">📷</div>';
+        const logoUrl = restaurantSettings && restaurantSettings.logo_url ? restaurantSettings.logo_url : '';
+        const logoOverlay = logoUrl ? `<img src="${logoUrl}" class="image-logo-overlay" alt="logo">` : '';
+        
+        const imageContent = p.image_url ? 
+            `<div class="relative w-24 h-24 flex-shrink-0">
+                <img src="${p.image_url}" alt="${p.name_ar}" class="w-24 h-24 object-cover" loading="lazy">
+                ${logoOverlay}
+            </div>` : 
+            '<div class="w-24 h-24 bg-gray-200 flex-shrink-0 flex items-center justify-center">📷</div>';
         
         div.innerHTML = `
+            ${imageContent}
             <div class="flex-1 p-4">
                 <h3 class="font-bold text-lg">${p.name_ar}</h3>
                 <p class="text-sm text-gray-600">${catMap[p.category_id]?.name_ar || '-'}</p>

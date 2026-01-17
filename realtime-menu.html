@@ -111,6 +111,26 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+        .image-logo-overlay {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            padding: 2px;
+            z-index: 5;
+            pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .category-image-wrapper, .product-image {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +159,7 @@
         // State
         let categories = [];
         let products = [];
+        let settings = null;
         let selectedCategory = null;
         let realtimeSubscription = null;
         
@@ -169,7 +190,7 @@
         // Load initial data
         async function loadInitialData() {
             try {
-                const [categoriesData, productsData] = await Promise.all([
+                const [categoriesData, productsData, settingsData] = await Promise.all([
                     supabase.from('categories')
                         .select('*')
                         .eq('restaurant_id', RESTAURANT_ID)
@@ -179,12 +200,21 @@
                         .select('*')
                         .eq('restaurant_id', RESTAURANT_ID)
                         .eq('is_available', true)
-                        .order('display_order', 'asc')
+                        .order('display_order', 'asc'),
+                    supabase.from('restaurant_settings')
+                        .select('*')
+                        .eq('restaurant_id', RESTAURANT_ID)
+                        .maybeSingle()
                 ]);
                 
-                categories = categoriesData || [];
-                products = productsData || [];
+                categories = categoriesData.data || [];
+                products = productsData.data || [];
+                settings = settingsData.data || null;
                 
+                if (settings && settings.restaurant_name_ar) {
+                    getEl('restaurantName').textContent = settings.restaurant_name_ar;
+                }
+
                 // Update UI
                 updateCategoriesUI();
                 updateProductsUI();
@@ -260,17 +290,19 @@
             
             container.innerHTML = categories.map((cat, index) => {
                 const productCount = products.filter(p => p.category_id === cat.id).length;
+                const logoHtml = settings && settings.logo_url ? `<img src="${settings.logo_url}" class="image-logo-overlay" alt="logo">` : '';
                 return `
-                    <div class="category-card fade-in" style="animation-delay: ${index * 100}ms;">
+                    <div class="category-card fade-in" style="animation-delay: ${index * 100}ms;" onclick="selectCategory('${cat.id}')">
                         <div class="category-image-wrapper">
                             ${cat.image_url ? 
-                                `<img src="${cat.image_url}" alt="${cat.name_ar}" class="w-full h-32 object-cover">` :
-                                `<div class="text-4xl text-gray-400">📷</div>`
+                                `<img src="${cat.image_url}" alt="${cat.name_ar}" class="w-full h-32 object-cover">
+                                 ${logoHtml}` :
+                                `<div class="text-4xl text-gray-400 bg-gray-100 h-32 flex items-center justify-center">📷</div>`
                             }
                             ${productCount > 0 ? `<span class="absolute top-2 right-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-bold">${productCount}</span>` : ''}
                         </div>
-                        <div class="category-info">
-                            <h3>${cat.name_ar}</h3>
+                        <div class="category-info p-3">
+                            <h3 class="font-bold text-lg">${cat.name_ar}</h3>
                         </div>
                     </div>
                 `;
@@ -283,28 +315,43 @@
             
             if (selectedCategory) {
                 const filteredProducts = products.filter(p => p.category_id === selectedCategory);
-                container.innerHTML = filteredProducts.map((product, index) => {
-                    return `
-                        <div class="product-card fade-in" style="animation-delay: ${index * 50}ms;">
-                            <div class="product-image">
-                                ${product.image_url ? 
-                                    `<img src="${product.image_url}" alt="${product.name_ar}" class="w-full h-32 object-cover">` :
-                                    `<div class="text-4xl text-gray-400">📷</div>`
-                                }
-                            </div>
-                            <div class="product-content">
-                                <h4>${product.name_ar}</h4>
-                                <p class="text-gray-600">${product.description_ar || ''}</p>
-                                <div class="product-footer">
-                                    <span class="text-lg font-bold">${product.price} ج.م</span>
+                const logoHtml = settings && settings.logo_url ? `<img src="${settings.logo_url}" class="image-logo-overlay" alt="logo">` : '';
+                container.innerHTML = `
+                    <div class="col-span-full mb-4">
+                        <button onclick="backToCategories()" class="text-blue-600 font-bold">← العودة للفئات</button>
+                    </div>
+                    ${filteredProducts.map((product, index) => {
+                        return `
+                            <div class="product-card fade-in" style="animation-delay: ${index * 50}ms;">
+                                <div class="product-image">
+                                    ${product.image_url ? 
+                                        `<img src="${product.image_url}" alt="${product.name_ar}" class="w-full h-40 object-cover">
+                                         ${logoHtml}` :
+                                        `<div class="text-4xl text-gray-400 bg-gray-100 h-40 flex items-center justify-center">📷</div>`
+                                    }
+                                </div>
+                                <div class="product-content p-4">
+                                    <h4 class="font-bold text-lg">${product.name_ar}</h4>
+                                    <p class="text-gray-600 text-sm mb-2">${product.description_ar || ''}</p>
+                                    <div class="product-footer flex justify-between items-center">
+                                        <span class="text-lg font-bold text-orange-600">${product.price} ج.م</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                }).join('');
+                        `;
+                    }).join('')}
+                `;
+                getEl('categoriesContainer').style.display = 'none';
+                container.style.display = 'grid';
             } else {
-                container.innerHTML = '<div class="text-center text-gray-500 py-8">الرجاء إلى الفئات لعرض المنتجات</div>';
+                getEl('categoriesContainer').style.display = 'grid';
+                container.style.display = 'none';
             }
+        }
+
+        function backToCategories() {
+            selectedCategory = null;
+            updateProductsUI();
         }
         
         // UI Helper functions

@@ -245,7 +245,7 @@
             '<p class="text-gray-500 text-center py-8">لا توجد منتجات</p>' :
             filtered.map(p => `
                 <div class="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden flex">
-                    ${p.image_url ? `<img src="${p.image_url}" alt="${p.name_ar}" class="w-24 h-24 object-cover">` : '<div class="w-24 h-24 bg-gray-200 flex items-center justify-center">📷</div>'}
+                    ${p.image_url ? `<img src="${optimizeImageUrl(p.image_url, 150)}" alt="${p.name_ar}" class="w-24 h-24 object-cover">` : '<div class="w-24 h-24 bg-gray-200 flex items-center justify-center">📷</div>'}
                     <div class="flex-1 p-4">
                         <h3 class="font-bold">${p.name_ar}</h3>
                         <p class="text-sm text-gray-600">${catMap[p.category_id] || 'N/A'}</p>

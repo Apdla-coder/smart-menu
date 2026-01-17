@@ -89,7 +89,7 @@ function applyTheme(primaryColor, logoUrl) {
     if (logoUrl) {
         const logoEl = document.getElementById('restLogo');
         if (logoEl) {
-            logoEl.innerHTML = `<img src="${logoUrl}" alt="Logo" class="h-8 w-auto">`;
+            logoEl.innerHTML = `<img src="${optimizeImageUrl(logoUrl, 50)}" alt="Logo" class="h-8 w-auto">`;
         }
     }
 }
